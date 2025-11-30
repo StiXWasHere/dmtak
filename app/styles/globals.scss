@@ -1,0 +1,11 @@
+@import 'variables/variables';
+
+* {
+    margin: 0;
+    padding: 0;
+    font-size: 1.1rem;
+}
+body {
+    color: $black;
+    background-color: $white;
+}
