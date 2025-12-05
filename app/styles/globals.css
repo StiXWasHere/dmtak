@@ -9,4 +9,74 @@ body {
   background-color: rgb(254, 254, 254);
 }
 
+a {
+  text-decoration: none;
+  color: rgb(254, 254, 254);
+}
+
+input {
+  border: 1px solid rgb(15, 15, 15);
+  border-radius: 0.2rem;
+  padding: 0.1rem;
+}
+
+.page-title-1 {
+  font-size: 24px;
+}
+
+.page-title-3 {
+  margin-block: 1rem;
+}
+
+#SubmitFormBtn {
+  color: rgb(254, 254, 254);
+  background-color: rgb(220, 4, 43);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  width: fit-content;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+#SubmitFormBtn:hover {
+  background-color: rgba(220, 4, 43, 0.9);
+  cursor: pointer;
+}
+
+#NavBtn {
+  width: clamp(16rem, 40vw, 25rem);
+  height: clamp(5rem, 8vw, 8rem);
+  background-color: rgb(220, 4, 43);
+  color: rgb(254, 254, 254);
+  border: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 0.3rem;
+  cursor: pointer;
+}
+#NavBtn:hover {
+  background-color: rgba(220, 4, 43, 0.9);
+}
+
+#NavBtnThin {
+  width: clamp(16rem, 40vw, 25rem);
+  height: clamp(3rem, 5vw, 5rem);
+  background-color: rgb(220, 4, 43);
+  color: rgb(254, 254, 254);
+  border: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 0.3rem;
+  cursor: pointer;
+}
+#NavBtnThin:hover {
+  background-color: rgba(220, 4, 43, 0.9);
+}
+
+#NavLink {
+  font-size: 32px;
+}
+
+select {
+  border-radius: 0.2rem;
+  border: 1px solid rgb(15, 15, 15);
+}
+
 /*# sourceMappingURL=globals.css.map */

@@ -1,0 +1,23 @@
+.project-modal {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(201, 198, 198, 0.397);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.project-modal-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: rgb(254, 254, 254);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: clamp(300px, 80vw, 500px);
+}
+
+/*# sourceMappingURL=projectModal.css.map */

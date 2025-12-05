@@ -1,0 +1,68 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgb(220, 4, 43);
+  padding-block: 1rem;
+  padding-inline: 1rem;
+}
+.header-list {
+  position: fixed;
+  top: 70;
+  left: 0;
+  background-color: rgb(220, 4, 43);
+  list-style: none;
+  width: 100vw;
+  z-index: 1000;
+  text-align: end;
+  /* Transition styles */
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+.header-list.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.header-list li {
+  padding: 0.8rem;
+  padding-inline: 1.2rem;
+}
+.header-list li a {
+  text-decoration: none;
+  color: rgb(254, 254, 254);
+  display: block;
+}
+
+#Logo {
+  width: clamp(150px, 25vw, 250px);
+}
+
+.menu-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 18px;
+  cursor: pointer;
+}
+.menu-icon span {
+  display: block;
+  height: 3px;
+  background-color: rgb(254, 254, 254);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+.menu-icon.open span:nth-child(1) {
+  transform: rotate(45deg) translateY(8px) translateX(5px);
+}
+.menu-icon.open span:nth-child(2) {
+  opacity: 0;
+}
+.menu-icon.open span:nth-child(3) {
+  transform: rotate(-45deg) translateY(-6px) translateX(2.5px);
+}
+
+/*# sourceMappingURL=header.css.map */

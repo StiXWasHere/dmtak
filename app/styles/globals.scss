@@ -1,4 +1,4 @@
-@import 'variables/variables';
+@use 'variables' as *;
 
 * {
     margin: 0;
@@ -8,4 +8,72 @@
 body {
     color: $black;
     background-color: $white;
+}
+a {
+    text-decoration: none;
+    color: $white;
+}
+input {
+    border: 1px solid $black;
+    border-radius: .2rem;
+    padding: .1rem;
+}
+.page-title-1 {
+    font-size: $medium-text;
+}
+.page-title-3 {
+    margin-block: 1rem;
+}
+#SubmitFormBtn {
+    color: $white;
+    background-color: $red;
+    border: none;
+    padding: .5rem 1rem;
+    border-radius: .5rem;
+    width: fit-content;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+        background-color: $lighten-red;
+        cursor: pointer;
+    }
+}
+
+#NavBtn {
+    width: clamp(16rem, 40vw, 25rem);
+    height: clamp(5rem, 8vw, 8rem);
+    background-color: $red;
+    color: $white;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: .3rem;
+
+    cursor: pointer;
+
+    &:hover {
+        background-color: $lighten-red;
+    }
+}
+#NavBtnThin {
+    width: clamp(16rem, 40vw, 25rem);
+    height: clamp(3rem, 5vw, 5rem);
+    background-color: $red;
+    color: $white;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: .3rem;
+
+    cursor: pointer;
+
+    &:hover {
+        background-color: $lighten-red;
+    }
+}
+#NavLink {
+    font-size: $large-text;
+}
+
+select {
+    border-radius: .2rem;
+    border: 1px solid $black;
 }

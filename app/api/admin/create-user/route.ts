@@ -13,12 +13,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { email, password }: { email: string; password: string } = await req.json();
-
+  const { email, password, role }: { email: string; password: string; role: string } = await req.json();
 
   const newUser = await client.users.createUser({
     emailAddress: [email],
     password: password, // Clerk requires a password if not using invite
+    publicMetadata: {role},
   });
 
   return NextResponse.json(newUser);

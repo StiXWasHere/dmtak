@@ -1,0 +1,1 @@
+{"version":3,"sourceRoot":"","sources":["adminPage.scss","../../styles/_variables.scss"],"names":[],"mappings":"AAEA;EACI;EACA;EACA;EACA;;;AAEJ;EACI;EACA;EACA;EACA;EACA;;;AAEJ;EACI;EACA;EACA;EACA;;AAEA;EACI;EACA;EACA;EACA;EACA;EACA;;AAEA;EACI;EACA;EACA;;;AAIZ;EACI,OC3BI;ED4BJ,kBC9BE;ED+BF;EACA;EACA;EACA;EACA;;AAEA;EACI,kBCrCM;EDsCN;;;AAGR;EACI;EACA;EACA","file":"adminPage.css"}
