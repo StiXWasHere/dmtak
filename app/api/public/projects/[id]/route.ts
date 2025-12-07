@@ -1,22 +1,25 @@
-// app/api/public/projects/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } | Promise<{ id: string}> }) {
+export async function GET(
+  req: NextRequest,
+  context: { params: { id: string } } | { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params; // <-- await here
 
-    const { id } = await params;
+  if (!id) {
+    console.log("ID provided:", id);
+    return NextResponse.json({ error: "Missing project ID" }, { status: 400 });
+  }
 
-    if (!id) {
-        return NextResponse.json({ error: "Missing project ID" }, { status: 400 });
-    }
+  const docRef = doc(db, "projects", id);
+  const snapshot = await getDoc(docRef);
 
-    const docRef = doc(db, "projects", id);
-    const snapshot = await getDoc(docRef);
+  if (!snapshot.exists()) {
+    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
 
-    if (!snapshot.exists()) {
-        return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(snapshot.data());
+  return NextResponse.json(snapshot.data());
 }
+

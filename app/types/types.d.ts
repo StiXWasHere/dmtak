@@ -16,10 +16,11 @@ type Form = {
     id: string;
     title: string;
     type: 'Delbesiktning' | 'Slutbesiktning' | 'Egenkontroll';
+    createdAt: number;
     projectId: string;
     generalSectionTitle: string;
     generalSection: FormField[];
-    roofSides: RoofSide[];
+    roofSides?: RoofSide[];
 }
 type FormSection = {
     id: string;
@@ -29,8 +30,7 @@ type FormSection = {
 type FormField = {
     title: string;
     fieldId: string;
-    options: Array<'Godkänt', 'Ej godkänt', 'Ej aktuellt', 'Avhjälpt'>;
-    createdAt: number;
+    options?: Array<'Godkänt', 'Ej godkänt', 'Ej aktuellt', 'Avhjälpt'>;
     comment?: string;
     imgUrl?: string;
 }

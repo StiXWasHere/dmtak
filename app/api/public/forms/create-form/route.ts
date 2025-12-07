@@ -36,20 +36,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Template not found" }, { status: 404 });
   }
 
-  const template = templateSnap.data();
+  const template: FormTemplate = templateSnap.data() as FormTemplate;
 
   // create new form under the project
   const newFormRef = doc(
     collection(db, "projects", projectId, "forms")
   );
 
-  const newForm = {
+  const newForm: Form = {
     id: newFormRef.id,
     title: title.trim(),
+    type: template.type,
     createdAt: Date.now(),
-    templateId,
-    fields: template.fields || [],
+    projectId,
+    generalSectionTitle: template.generalSectionTitle,
+    generalSection: template.generalSection.map(f => ({
+      title: f.title,
+      fieldId: f.fieldId,
+      options: ['Godkänt', 'Ej godkänt', 'Ej aktuellt', 'Avhjälpt'],
+      comment: '',
+      imgUrl: ''
+    }))
   };
+
 
   await setDoc(newFormRef, newForm);
 
