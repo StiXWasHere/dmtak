@@ -15,7 +15,7 @@ type Project = {
 type Form = {
     id: string;
     title: string;
-    type: 'Delbesiktning' | 'Slutbesiktning' | 'Egenkontroll';
+    type: 'Delbesiktning' | 'Slutbesiktning' | 'Egenkontroll' | 'Takfall';
     createdAt: number;
     projectId: string;
     generalSectionTitle: string;
@@ -31,6 +31,7 @@ type FormField = {
     title: string;
     fieldId: string;
     options?: Array<'Godkänt', 'Ej godkänt', 'Ej aktuellt', 'Avhjälpt'>;
+    selected?: string;
     comment?: string;
     imgUrl?: string;
 }
@@ -57,4 +58,12 @@ type FormFieldTemplate = {
     title: string;
     fieldId: string;
 };
+type FormEdits = {
+  [fieldId: string]: {
+    selected: string;
+    comment: string;
+    imgUrl?: string;
+  };
+};
+
 

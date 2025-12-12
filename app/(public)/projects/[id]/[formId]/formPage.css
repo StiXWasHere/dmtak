@@ -7,11 +7,106 @@
   gap: 2rem;
   list-style: none;
 }
-.form-page-ul {
+.form-page .form-page-ul {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  list-style: none;
+}
+.form-page .form-page-ul-li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+.form-page .form-page-ul-li .form-textarea {
+  width: 100%;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+.form-page .form-page-ul-li-img-container { /* this is fine since your class is still applied */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.form-page .form-page-ul-li-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.form-page .form-page-ul-li-input .radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  cursor: pointer;
+}
+.form-page .form-page-ul-li-input .radio-input {
+  display: none;
+}
+.form-page .form-page-ul-li-input .radio-box {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #333;
+  border-radius: 2px;
+  position: relative;
+}
+.form-page .form-page-ul-li-input .radio-input:checked + .radio-box::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  background-color: rgb(220, 4, 43);
+  border-radius: 2px;
+}
+
+.roof-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+.roof-side .roof-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.add-roof-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+#ImgSubmitBtn {
+  font-size: 2.5rem;
+  opacity: 60%;
+  background-color: rgb(250, 250, 250);
+  border: 1px solid rgb(15, 15, 15);
+  border-radius: 0.4rem;
+  width: 70%;
+  cursor: pointer;
+}
+
+#HideFormBtn {
+  padding-inline: 1rem;
+  padding-block: 0.3rem;
+  border: 1px solid rgb(15, 15, 15);
+  border-radius: 0.2rem;
+  color: rgb(254, 254, 254);
+  background-color: rgb(220, 4, 43);
+}
+#HideFormBtn:hover {
+  background-color: rgba(220, 4, 43, 0.9);
 }
 
 /*# sourceMappingURL=formPage.css.map */
