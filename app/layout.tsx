@@ -7,19 +7,15 @@ import {
   SignedOut,
   UserButton,
 } from '@clerk/nextjs'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Be_Vietnam_Pro } from 'next/font/google';
 import './styles/globals.css'
 import Header from './components/Header/Header'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const beVietnamPro = Be_Vietnam_Pro({
+  weight: ['400', '500', '600'], // choose the weights you need
   subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
+  variable: '--font-be-vietnam-pro',
+});
 
 export const metadata: Metadata = {
   title: 'DM TAK',
@@ -34,7 +30,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <body className={beVietnamPro.variable}>
           <Header />
           {children}
         </body>

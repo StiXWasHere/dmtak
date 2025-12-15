@@ -100,7 +100,7 @@
 #HideFormBtn {
   padding-inline: 1rem;
   padding-block: 0.3rem;
-  border: 1px solid rgb(15, 15, 15);
+  border: none;
   border-radius: 0.2rem;
   color: rgb(254, 254, 254);
   background-color: rgb(220, 4, 43);

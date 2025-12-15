@@ -91,12 +91,32 @@ export default function FormPage() {
   }, []);
 
 
-  const saveImage = useCallback((fieldId: string, file: File) => {
+  const saveImage = useCallback(async (fieldId: string, file: File) => {
+    // local preview still works
     setLocalImages((prev) => ({ ...prev, [fieldId]: file }));
 
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/public/upload/image", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      console.error("Image upload failed");
+      return;
+    }
+
+    const { url } = await res.json();
+
+    // store ONLY the URL in edits
     setEdits((prev) => {
       const prevField = prev[fieldId] || {};
-      return { ...prev, [fieldId]: { ...prevField, imgUrl: "" } };
+      return {
+        ...prev,
+        [fieldId]: { ...prevField, imgUrl: url },
+      };
     });
   }, []);
 
@@ -143,26 +163,13 @@ const handleSave = async () => {
 
   console.log("merged payload:", payload);
 
-  // 3. Send JSON + Files in one FormData
-  const formData = new FormData();
-
-  // JSON payload
-  formData.append("json", JSON.stringify(payload));
-
-  // Attach only the images that exist in localImages
-  for (const fieldId in localImages) {
-    const file = localImages[fieldId];
-    if (file) {
-      formData.append(`file-${fieldId}`, file);
-    }
-  }
-
   try {
     const res = await fetch(
       `/api/public/projects/${projectId}/forms/${formId}`,
       {
         method: "PUT",
-        body: formData, // no headers!
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       }
     );
 
@@ -184,13 +191,13 @@ const handleSave = async () => {
 };
 
 
-  if (loading) return <p>Loading form...</p>;
-  if (!form) return <p>Form not found.</p>;
+  if (loading) return <p>Laddar formulär...</p>;
+  if (!form) return <p>Inga formulär hittade.</p>;
 
   return (
     <div className="form-page">
       <h1>{form.title}</h1>
-      <p>Created: {new Date(form.createdAt).toLocaleString()}</p>
+      <p>Skapad: {new Date(form.createdAt).toLocaleString()}</p>
 
       <h2>{form.generalSectionTitle}</h2>
       {form.generalSection.map((field) => (
@@ -236,7 +243,7 @@ const handleSave = async () => {
       </form>
 
       <button onClick={handleSave} id="SubmitFormBtn">
-        Save Form
+        Spara formulär
       </button>
     </div>
   );

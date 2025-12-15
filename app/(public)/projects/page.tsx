@@ -50,7 +50,7 @@ function ProjectsPage() {
         <div className="projects-page">
             <h1 className="page-title-1">Projekt</h1>
           {loading ? (
-            <p>Loading...</p>
+            <p>Laddar...</p>
           ) : projects.length === 0 ? (
             <p>Inga projekt än</p>
           ) : (

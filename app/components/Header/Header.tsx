@@ -32,7 +32,7 @@ function Header() {
             <span></span>
         </div>            
         <ul className={`header-list ${open ? "open" : ""}`}>
-            <li><a href="/">Home</a></li>
+            <li><a href="/">Start</a></li>
             <li><a href="/admin">Admin</a></li>
             <li>
               <SignedOut>

@@ -74,17 +74,17 @@ export default function ProjectPage() {
     }
   }
 
-  if (loadingProject) return <p>Loading project...</p>;
+  if (loadingProject) return <p>Laddar projekt...</p>;
   if (error) return <p>{error}</p>;
-  if (!project) return <p>No project found.</p>;
+  if (!project) return <p>Inget projekt hittat.</p>;
 
   return (
     <div className="project-detail-page">
       <h1 className="page-title-1">{project.title}</h1>
-      <p>Created: {new Date(project.createdAt).toLocaleString()}</p>
+      <p>Skapad: {new Date(project.createdAt).toLocaleString()}</p>
 
       {loadingForms ? (
-        <p>Loading forms...</p>
+        <p>Laddar formulär...</p>
       ) : forms.length > 0 ? (
         <div className="project-detail-page-forms">
           <h2>Forms</h2>
