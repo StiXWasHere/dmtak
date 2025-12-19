@@ -9,6 +9,7 @@ import {
   buildUpdatedGeneralSection,
   buildUpdatedRoofSides,
 } from "@/app/helpers/formHelpers";
+import { renderToStaticMarkup } from "react-dom/server";
 import "./formPage.css";
 
 export default function FormPage() {
