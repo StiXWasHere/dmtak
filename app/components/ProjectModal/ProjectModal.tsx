@@ -13,15 +13,21 @@ function CreateProjectModal({ open, onClose, onSubmit }: CreateProjectModalProps
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    e.stopPropagation();
     onSubmit({ title });
+    onClose();
+  }
+
+  function handleClose(e: React.MouseEvent) {
+    e.stopPropagation();
     onClose();
   }
 
   if (!open) return null;
 
   return (
-    <div className="project-modal">
-      <form className='project-modal-form' onSubmit={handleSubmit}>
+    <div className="project-modal" onClick={handleClose}>
+      <form className='project-modal-form' onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}>
         <label htmlFor="createProject">Ange ett namn för ditt projekt</label>
         <input
             name='createProject'

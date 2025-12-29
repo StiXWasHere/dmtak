@@ -1,1 +1,1 @@
-{"version":3,"sourceRoot":"","sources":[],"names":[],"mappings":"","file":"formModal.css"}
+{"version":3,"sourceRoot":"","sources":["formModal.scss","../../styles/_variables.scss"],"names":[],"mappings":"AAEA;EACI;EACA;EACA;EACA;EACA;EACA;EACA;EACA;;AAEA;EACI;EACA;EACA;EACA;EACA;EACA,kBCRA;EDSA;EACA;EACA","file":"formModal.css"}

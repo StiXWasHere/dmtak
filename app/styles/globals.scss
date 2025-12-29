@@ -38,6 +38,9 @@ input {
 .page-title-3 {
     margin-block: 1rem;
 }
+.small-text {
+    font-size: 14px;
+}
 #SubmitFormBtn {
     color: $white;
     background-color: $red;
@@ -90,4 +93,18 @@ input {
 select {
     border-radius: .2rem;
     border: 1px solid $black;
+}
+.horizontal-div {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+.vertical-div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    width: 100%;
 }

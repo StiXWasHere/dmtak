@@ -1,5 +1,5 @@
 :root {
-  --font-be-vietnam-pro: 'Be Vietnam Pro', sans-serif;
+  --font-be-vietnam-pro: "Be Vietnam Pro", sans-serif;
 }
 
 * {
@@ -44,6 +44,10 @@ input {
 
 .page-title-3 {
   margin-block: 1rem;
+}
+
+.small-text {
+  font-size: 14px;
 }
 
 #SubmitFormBtn {
@@ -95,6 +99,22 @@ input {
 select {
   border-radius: 0.2rem;
   border: 1px solid rgb(15, 15, 15);
+}
+
+.horizontal-div {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.vertical-div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
 }
 
 /*# sourceMappingURL=globals.css.map */

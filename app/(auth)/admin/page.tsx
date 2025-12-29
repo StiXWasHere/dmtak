@@ -32,7 +32,7 @@ export default function AdminPage() {
 
   // after all hooks
   if (!user) {
-    return <p>Loading</p>;
+    return <p>Laddar...</p>;
   }
 
   const role = user.publicMetadata.role;
@@ -99,6 +99,7 @@ export default function AdminPage() {
       <h1 className="page-title-1">Admin Panel</h1>
 
       <form className="create-user-form" onSubmit={createUser}>
+        <h2 className="page-title-2">Skapa ny användare</h2>
         <input
           type="email"
           placeholder="email"
@@ -155,10 +156,12 @@ export default function AdminPage() {
             ))
           )}        
       </div>
+          <div className="admin-forms-redirect">
+            <button id="SubmitFormBtn">
+              <a href="/admin/form">Skapa ny formulärmall</a>
+            </button>            
+          </div>
 
-          <button id="SubmitFormBtn">
-            <a href="/admin/form">Skapa ny formulärmall</a>
-          </button>
 
     </div>
   );

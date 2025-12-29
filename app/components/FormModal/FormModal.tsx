@@ -22,6 +22,7 @@ export default function CreateFormModal({ open, onClose, onSubmit }: Props) {
 
     const load = async () => {
       setLoading(true);
+      setError("");
       try {
         const res = await fetch("/api/public/forms/get-form-templates");
         if (!res.ok) throw new Error("Failed to load templates");
@@ -38,7 +39,10 @@ export default function CreateFormModal({ open, onClose, onSubmit }: Props) {
     load();
   }, [open]);
 
-  const handleSubmit = () => {
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+
     if (!title.trim() || !templateId) return;
 
     onSubmit({
@@ -55,56 +59,58 @@ export default function CreateFormModal({ open, onClose, onSubmit }: Props) {
   if (!open) return null;
 
   return (
-    <div className="form-modal">
-      <div>
-        <h2>Create Form</h2>
+    <div className="form-modal" onClick={onClose}>
+        <form className="form-modal-form"onClick={(e) => e.stopPropagation()}>
+          <h2>Create Form</h2>
 
-        {loading && <p>Loading templates…</p>}
-        {error && <p>{error}</p>}
+          {loading && <p>Loading templates…</p>}
+          {error && <p>{error}</p>}
 
-        {!loading && (
-          <>
-            <div>
-              <label>Form title</label>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
+          {!loading && (
+            <>
+              <div className="vertical-div">
+                <label htmlFor="formTitle" >Form title</label>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  name="formTitle"
+                />
+              </div>
 
-            <div >
-              <label >Template</label>
-              <select
-                value={templateId}
-                onChange={(e) => setTemplateId(e.target.value)}
-              >
-                <option value="">Select template</option>
-                {templates.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.title}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div className="vertical-div">
+                <label htmlFor="formTemplate">Template</label>
+                <select
+                  value={templateId}
+                  onChange={(e) => setTemplateId(e.target.value)}
+                  name="formTemplate"
+                >
+                  <option value="">Select template</option>
+                  {templates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <button
-                onClick={onClose}
-                id="SubmitFormBtn"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                id="SubmitFormBtn"
-                disabled={!title.trim() || !templateId}
-              >
-                Create
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+              <div className="horizontal-div">
+                <button
+                  onClick={onClose}
+                  id="SubmitFormBtn"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  id="SubmitFormBtn"
+                  disabled={!title.trim() || !templateId}
+                >
+                  Create
+                </button>
+              </div>
+            </>
+          )}
+        </form>
     </div>
   );
 }

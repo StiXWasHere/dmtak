@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuth } from "@clerk/nextjs/server";
 import { chromium } from "playwright";
+import fs from "fs";
+import path from "path";
 
 export const runtime = "nodejs";
 
@@ -19,6 +21,14 @@ export async function GET(
   if (!baseUrl) {
     return new Response("APP_URL not configured", { status: 500 });
   }
+
+  const logoPath = path.join(process.cwd(), "public", "dmtaklogo.png");
+  const logoBase64 = fs.readFileSync(logoPath, { encoding: "base64" });
+  const logoDataUrl = `data:image/png;base64,${logoBase64}`;
+
+  const logoUrl = `${baseUrl}/dmtaklogo.png`;
+
+  console.log(logoUrl)
 
   const pdfPageUrl = `${baseUrl}/pdf/${id}/${formId}`;
 
@@ -49,20 +59,37 @@ export async function GET(
       waitUntil: "networkidle",
     });
 
+    await page.emulateMedia({ media: "print" });
+
+    await page.evaluate(async () => {
+      const imgs = Array.from(document.images);
+      await Promise.all(imgs.map(img => {
+        if (img.complete) return;
+        return new Promise(resolve => {
+          img.onload = img.onerror = resolve;
+        });
+      }));
+    });
+
+
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
       scale: 1,
       displayHeaderFooter: true,
-      margin: {
-        top: "60px",
-        bottom: "60px",
-        left: "20mm",
-        right: "20mm",
-      },
       headerTemplate: `
-        <div style="width:100%; text-align:center; font-size:12px;">
-          Company Name – Inspection Report
+        <div style="
+        width:100%; 
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-bottom:1px solid rgba(0, 0, 0, 1);
+        ">
+          <img
+            src="${logoDataUrl}"
+            style="height:59px;"
+            alt="DM TAK Logo"
+          />
         </div>
       `,
       footerTemplate: `

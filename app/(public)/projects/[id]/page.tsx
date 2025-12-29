@@ -81,13 +81,13 @@ export default function ProjectPage() {
   return (
     <div className="project-detail-page">
       <h1 className="page-title-1">{project.title}</h1>
-      <p>Skapad: {new Date(project.createdAt).toLocaleString()}</p>
+      
 
       {loadingForms ? (
         <p>Laddar formulär...</p>
       ) : forms.length > 0 ? (
         <div className="project-detail-page-forms">
-          <h2>Forms</h2>
+          <h2>Formulär</h2>
           <ul className="project-detail-page-forms-list">
             {forms.map((form) => (
               <Link key={form.id} href={`/projects/${projectId}/${form.id}`}>
@@ -113,6 +113,7 @@ export default function ProjectPage() {
           onSubmit={({ title, templateId }) => createForm(title, templateId)}
         />
       </div>
+      <p className="small-text">Skapad: {new Date(project.createdAt).toLocaleDateString("sv-SE")}</p>
     </div>
   );
 }

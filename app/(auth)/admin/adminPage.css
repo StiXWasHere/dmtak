@@ -33,6 +33,10 @@
   align-items: center;
 }
 
+.admin-forms-redirect {
+  margin-bottom: 3rem;
+}
+
 #UserRoleBtn {
   color: rgb(254, 254, 254);
   background-color: rgb(220, 4, 43);

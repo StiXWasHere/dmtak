@@ -136,60 +136,83 @@ export default function FormPage() {
     setEdits((prev) => ({ ...prev, ...newEdits }));
   };
 
-const handleSave = async () => {
-  if (!form) return;
+  const handleSave = async () => {
+    if (!form) return;
 
-  console.log("localImages before save:", localImages);
-  console.log("edits before save:", edits);
+    console.log("localImages before save:", localImages);
+    console.log("edits before save:", edits);
 
-  // 1. Merge all fields with edits + mark which ones have new images
-  const updatedGeneral = buildUpdatedGeneralSection(
-    form.generalSection,
-    edits,
-    localImages
-  );
-
-  const updatedRoofSides = buildUpdatedRoofSides(
-    form.roofSides,
-    edits,
-    localImages
-  );
-
-  // 2. Build the JSON object (same as before)
-  const payload = {
-    ...form,
-    generalSection: updatedGeneral,
-    roofSides: updatedRoofSides || [],
-  };
-
-  console.log("merged payload:", payload);
-
-  try {
-    const res = await fetch(
-      `/api/public/projects/${projectId}/forms/${formId}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
+    // 1. Merge all fields with edits + mark which ones have new images
+    const updatedGeneral = buildUpdatedGeneralSection(
+      form.generalSection,
+      edits,
+      localImages
     );
 
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`Server returned ${res.status}: ${body}`);
+    const updatedRoofSides = buildUpdatedRoofSides(
+      form.roofSides,
+      edits,
+      localImages
+    );
+
+    // 2. Build the JSON object (same as before)
+    const payload = {
+      ...form,
+      generalSection: updatedGeneral,
+      roofSides: updatedRoofSides || [],
+    };
+
+    console.log("merged payload:", payload);
+
+    try {
+      const res = await fetch(
+        `/api/public/projects/${projectId}/forms/${formId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`Server returned ${res.status}: ${body}`);
+      }
+
+      const saved: Form = await res.json();
+
+      setForm(saved);
+      localStorage.removeItem(storageKey);
+      setLocalImages({});
+      alert("Form saved successfully");
+    } catch (err: any) {
+      console.error("Save failed:", err);
+      alert(err.message || "Failed to save form");
     }
+  };
 
-    const saved: Form = await res.json();
+  const handlePdfGenerate = async () => {
+    try {
+      const res = await fetch(`/api/public/projects/${projectId}/forms/${formId}/pdf`, 
+        { method: "GET" }
+      );
+      if (!res.ok) throw new Error("Failed to generate PDF");
 
-    setForm(saved);
-    localStorage.removeItem(storageKey);
-    setLocalImages({});
-    alert("Form saved successfully");
-  } catch (err: any) {
-    console.error("Save failed:", err);
-    alert(err.message || "Failed to save form");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `form-${formId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "An error occurred while generating PDF");
+    }
   }
-};
 
 
   if (loading) return <p>Laddar formulär...</p>;
@@ -245,6 +268,9 @@ const handleSave = async () => {
 
       <button onClick={handleSave} id="SubmitFormBtn">
         Spara formulär
+      </button>
+      <button onClick={handlePdfGenerate} id="SubmitFormBtn">
+        Generera PDF
       </button>
     </div>
   );
