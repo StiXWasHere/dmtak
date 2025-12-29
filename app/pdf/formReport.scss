@@ -5,14 +5,18 @@
   margin: 20mm;
   font-size: 7pt;
 }
+* {
+  margin: .1rem;
+}
 html {
-    font-size: 7pt;
+  font-size: 7pt;
 }
 
 body {
   font-family: Arial, sans-serif;
   font-size: 7pt;
   color: #000;
+  margin-top: 1000px; 
 }
 
 .pdf-form {

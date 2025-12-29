@@ -26,10 +26,6 @@ export async function GET(
   const logoBase64 = fs.readFileSync(logoPath, { encoding: "base64" });
   const logoDataUrl = `data:image/png;base64,${logoBase64}`;
 
-  const logoUrl = `${baseUrl}/dmtaklogo.png`;
-
-  console.log(logoUrl)
-
   const pdfPageUrl = `${baseUrl}/pdf/${id}/${formId}`;
 
   const browser = await chromium.launch({
@@ -77,6 +73,12 @@ export async function GET(
       printBackground: true,
       scale: 1,
       displayHeaderFooter: true,
+      margin: {
+        top: "30mm",
+        bottom: "20mm",
+        left: "20mm",
+        right: "20mm",
+      },
       headerTemplate: `
         <div style="
         width:100%; 

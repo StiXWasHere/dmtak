@@ -11,6 +11,9 @@ export default function PdfLayout({
         <meta charSet="utf-8" />
         <style>
           {`
+          * {
+              margin: .1rem;
+            }
             html {
                 font-size: 7pt;
             }
@@ -19,6 +22,7 @@ export default function PdfLayout({
               font-family: Arial, sans-serif;
               font-size: 7pt;
               color: #000;
+              margin-top: 1000px; 
             }
 
             .pdf-form {
