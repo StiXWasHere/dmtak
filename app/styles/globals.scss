@@ -41,6 +41,13 @@ input {
 .small-text {
     font-size: 14px;
 }
+.loading-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+}
 #SubmitFormBtn {
     color: $white;
     background-color: $red;

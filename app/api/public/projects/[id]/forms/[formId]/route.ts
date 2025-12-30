@@ -19,7 +19,6 @@ export async function GET(
 
   if (!snap.exists()) return NextResponse.json({ error: "Form not found" }, { status: 404 });
 
-  console.log("Form fetched:" + id)
   return NextResponse.json(snap.data());
 }
 
@@ -40,6 +39,10 @@ export async function PUT(
   const ref = doc(db, "projects", id, "forms", formId);
   await setDoc(ref, data, { merge: true });
 
-  return NextResponse.json({ ok: true });
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    return NextResponse.json({ error: "Form not found after update" }, { status: 500 });
+  }
+  return NextResponse.json(snap.data());
 }
 

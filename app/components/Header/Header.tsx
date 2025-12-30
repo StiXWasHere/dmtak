@@ -12,8 +12,11 @@ import {
   useUser,
 } from '@clerk/nextjs'
 import './header.css'
+import { useFormHeader } from '@/app/context/FormHeaderContext';
 
 function Header() {
+  const { showSave, onSave, showGenerate, onGeneratePdf } = useFormHeader();
+
   const { user } = useUser();
 
   const [open, setOpen] = useState(false);
@@ -33,6 +36,10 @@ function Header() {
         </div>            
         <ul className={`header-list ${open ? "open" : ""}`}>
             <li><a href="/">Start</a></li>
+
+            {showSave && (<li><a onClick={onSave}>Spara</a></li>)}
+            {showGenerate && (<li><a onClick={onGeneratePdf}>Generera PDF</a></li>)}
+
             <li><a href="/admin">Admin</a></li>
             <li>
               <SignedOut>
@@ -44,7 +51,6 @@ function Header() {
                 </SignOutButton>
               </SignedIn>              
             </li>
-
         </ul>
     </header>
   )

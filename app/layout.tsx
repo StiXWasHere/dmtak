@@ -8,8 +8,10 @@ import {
   UserButton,
 } from '@clerk/nextjs'
 import { Be_Vietnam_Pro } from 'next/font/google';
-import './styles/globals.css'
-import Header from './components/Header/Header'
+import './styles/globals.css';
+import Header from './components/Header/Header';
+import { Client } from '@clerk/nextjs/server';
+import { FormHeaderProvider } from './context/FormHeaderContext';
 
 const beVietnamPro = Be_Vietnam_Pro({
   weight: ['400', '500', '600'], // choose the weights you need
@@ -31,8 +33,10 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={beVietnamPro.variable}>
-          <Header />
-          {children}
+          <FormHeaderProvider>
+            <Header />
+            {children}
+          </FormHeaderProvider>
         </body>
       </html>
     </ClerkProvider>

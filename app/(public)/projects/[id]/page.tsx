@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import './projectDetailPage.css';
 import CreateFormModal from "@/app/components/FormModal/FormModal";
 import Link from "next/link";
+import Spinner from "@/app/components/LoadingSpinner/LoadingSpinner";
 
 export default function ProjectPage() {
   const pathname = usePathname(); // e.g., "/projects/abc123"
@@ -74,7 +75,11 @@ export default function ProjectPage() {
     }
   }
 
-  if (loadingProject) return <p>Laddar projekt...</p>;
+  if (loadingProject) return (
+    <div className="loading-page">
+      <Spinner size={48} />
+    </div>
+  );
   if (error) return <p>{error}</p>;
   if (!project) return <p>Inget projekt hittat.</p>;
 

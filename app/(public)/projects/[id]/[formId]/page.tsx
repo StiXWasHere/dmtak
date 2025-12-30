@@ -9,8 +9,10 @@ import {
   buildUpdatedGeneralSection,
   buildUpdatedRoofSides,
 } from "@/app/helpers/formHelpers";
-import { renderToStaticMarkup } from "react-dom/server";
 import "./formPage.css";
+import LoadingBar from "@/app/components/LoadingBar/LoadingBar";
+import Spinner from "@/app/components/LoadingSpinner/LoadingSpinner";
+import { useFormHeader } from "@/app/context/FormHeaderContext";
 
 export default function FormPage() {
   const { id: projectId, formId } = useParams();
@@ -18,8 +20,14 @@ export default function FormPage() {
   const [edits, setEdits] = useState<FormEdits>({});
   const [localImages, setLocalImages] = useState<{ [fieldId: string]: File | null }>({});
   const [loading, setLoading] = useState(true);
-  
 
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [stage, setStage] = useState<"idle" | "generating" | "rendering">("idle");
+
+  const { setHeader } = useFormHeader();
+
+  const timerRef = useRef<number | null>(null);
   const storageKey = `form-edits-${projectId}-${formId}`;
 
   // --- Load form and initialize edits ---
@@ -136,11 +144,9 @@ export default function FormPage() {
     setEdits((prev) => ({ ...prev, ...newEdits }));
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!form) return;
-
-    console.log("localImages before save:", localImages);
-    console.log("edits before save:", edits);
 
     // 1. Merge all fields with edits + mark which ones have new images
     const updatedGeneral = buildUpdatedGeneralSection(
@@ -161,8 +167,6 @@ export default function FormPage() {
       generalSection: updatedGeneral,
       roofSides: updatedRoofSides || [],
     };
-
-    console.log("merged payload:", payload);
 
     try {
       const res = await fetch(
@@ -189,89 +193,144 @@ export default function FormPage() {
       console.error("Save failed:", err);
       alert(err.message || "Failed to save form");
     }
-  };
+  }, [form, projectId, formId, edits, localImages, storageKey]);
 
-  const handlePdfGenerate = async () => {
+  const handlePdfGenerate = useCallback(async () => {
+    setStage("generating");
+    setGenerating(true);
+    setGenerateError(null);
+
+    timerRef.current = window.setTimeout(() => setStage("rendering"), 2000);
+
     try {
-      const res = await fetch(`/api/public/projects/${projectId}/forms/${formId}/pdf`, 
+      const res = await fetch(`/api/public/projects/${projectId}/forms/${formId}/pdf`,
         { method: "GET" }
       );
-      if (!res.ok) throw new Error("Failed to generate PDF");
+      if (!res.ok) {
+        setGenerateError("Failed to fetch form");
+        throw new Error("Failed to generate PDF");
+      }
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
+
       const a = document.createElement("a");
       a.href = url;
       a.download = `form-${formId}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
+
       window.URL.revokeObjectURL(url);
 
     } catch (err: any) {
       console.error(err);
-      alert(err.message || "An error occurred while generating PDF");
+      setGenerateError(err.message || "Failed to generate PDF");
+    } finally {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      setGenerating(false);
+      setStage("idle");
     }
-  }
+  }, [projectId, formId]);
+
+  //Use effect to set header buttons
+  useEffect(() => {
+    setHeader?.({
+      showSave: true,
+      onSave: handleSave,
+      showGenerate: true,
+      onGeneratePdf: handlePdfGenerate,
+    });
+
+    return () => {
+      setHeader?.({
+        showSave: false,
+        showGenerate: false,
+        onSave: undefined,
+        onGeneratePdf: undefined,
+      });
+    };
+  }, [setHeader, handleSave, handlePdfGenerate]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
 
 
-  if (loading) return <p>Laddar formulär...</p>;
+
+
+  if (loading) return (
+    <div className="loading-page">
+      <Spinner size={48} />
+    </div>
+  )
   if (!form) return <p>Inga formulär hittade.</p>;
 
   return (
-    <div className="form-page">
-      <h1>{form.title}</h1>
-      <p>Skapad: {new Date(form.createdAt).toLocaleString()}</p>
+      <div className="form-page">
+        <h1>{form.title}</h1>
+        <p className="small-text">Skapad: {new Date(form.createdAt).toLocaleDateString("sv-SE")}</p>
 
-      <h2>{form.generalSectionTitle}</h2>
-      {form.generalSection.map((field) => (
-        <FieldItem
-          key={field.fieldId}
-          field={field}
-          edits={edits}
-          localImages={localImages}
-          saveOption={saveOption}
-          saveComment={saveComment}
-          saveImage={saveImage}
-          className="form-page-ul-li"
-        />
-      ))}
+        <h2>{form.generalSectionTitle}</h2>
+        {form.generalSection?.map((field) => (
+          <FieldItem
+            key={field.fieldId}
+            field={field}
+            edits={edits}
+            localImages={localImages}
+            saveOption={saveOption}
+            saveComment={saveComment}
+            saveImage={saveImage}
+            className="form-page-ul-li"
+          />
+        ))}
 
-      {form.roofSides?.map((side) => (
-        <RoofSideSection
-          key={side.id}
-          roofSide={side}
-          edits={edits}
-          localImages={localImages}
-          saveOption={saveOption}
-          saveComment={saveComment}
-          saveImage={saveImage}
-        />
-      ))}
+        {form.roofSides?.map((side) => (
+          <RoofSideSection
+            key={side.id}
+            roofSide={side}
+            edits={edits}
+            localImages={localImages}
+            saveOption={saveOption}
+            saveComment={saveComment}
+            saveImage={saveImage}
+          />
+        ))}
 
-      <form
-        className="add-roof-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const input = e.currentTarget.elements.namedItem("TakfallInput") as HTMLInputElement;
-          if (!input.value) return;
-          addRoofSideHandler(input.value);
-          input.value = "";
-        }}
-      >
-        <label htmlFor="TakfallInput">Lägg till takfall</label>
-        <input type="text" name="TakfallInput" placeholder="Namnge takfall" />
-        <button type="submit" id="SubmitFormBtn">
-          Lägg till takfall
+        <form
+          className="add-roof-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const input = e.currentTarget.elements.namedItem("TakfallInput") as HTMLInputElement;
+            if (!input.value) return;
+            addRoofSideHandler(input.value);
+            input.value = "";
+          }}
+        >
+          <label htmlFor="TakfallInput">Lägg till takfall</label>
+          <input type="text" name="TakfallInput" placeholder="Namnge takfall" />
+          <button type="submit" id="SubmitFormBtn">
+            Lägg till takfall
+          </button>
+        </form>
+
+        <button onClick={handleSave} id="SubmitFormBtn">
+          Spara formulär
         </button>
-      </form>
-
-      <button onClick={handleSave} id="SubmitFormBtn">
-        Spara formulär
-      </button>
-      <button onClick={handlePdfGenerate} id="SubmitFormBtn">
-        Generera PDF
-      </button>
-    </div>
+        
+        <button onClick={handlePdfGenerate} id="SubmitFormBtn" disabled={generating}>
+          {generating ? "Genererar PDF..." : "Generera PDF"}
+        </button>
+        {generating && <LoadingBar />}
+        {generateError && <p className="error-text">{generateError}</p>}
+      </div>
   );
 }

@@ -73,19 +73,13 @@ export async function GET(
       printBackground: true,
       scale: 1,
       displayHeaderFooter: true,
-      margin: {
-        top: "30mm",
-        bottom: "20mm",
-        left: "20mm",
-        right: "20mm",
-      },
+      margin: { top: "40mm", right: "20mm", bottom: "20mm", left: "20mm" },
       headerTemplate: `
         <div style="
         width:100%; 
         display:flex;
         align-items:center;
         justify-content:center;
-        border-bottom:1px solid rgba(0, 0, 0, 1);
         ">
           <img
             src="${logoDataUrl}"

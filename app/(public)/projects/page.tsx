@@ -2,6 +2,7 @@
 import { use, useEffect, useState } from "react";
 import './projectsPage.css'
 import CreateProjectModal from "@/app/components/ProjectModal/ProjectModal";
+import Spinner from "@/app/components/LoadingSpinner/LoadingSpinner";
 
 function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -50,7 +51,7 @@ function ProjectsPage() {
         <div className="projects-page">
             <h1 className="page-title-1">Projekt</h1>
           {loading ? (
-            <p>Laddar...</p>
+            <Spinner size={48} />
           ) : projects.length === 0 ? (
             <p>Inga projekt än</p>
           ) : (

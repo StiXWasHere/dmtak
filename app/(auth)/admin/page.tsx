@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import type { User } from "@clerk/nextjs/server";
 import "./adminPage.scss";
+import Spinner from "@/app/components/LoadingSpinner/LoadingSpinner";
 
 export default function AdminPage() {
   const { user } = useUser();
@@ -32,7 +33,11 @@ export default function AdminPage() {
 
   // after all hooks
   if (!user) {
-    return <p>Laddar...</p>;
+    return (
+      <div className="loading-page">
+        <Spinner size={48} />
+      </div>
+    );
   }
 
   const role = user.publicMetadata.role;

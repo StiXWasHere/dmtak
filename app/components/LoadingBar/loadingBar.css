@@ -1,0 +1,28 @@
+/* loadingBar.css */
+.loading-bar {
+  width: 50%;
+  height: 6px;
+  background: rgb(254, 254, 254);
+  border: 1px solid rgb(15, 15, 15);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.loading-bar-inner {
+  width: 40%;
+  height: 100%;
+  background: rgb(220, 4, 43);
+  animation: loading-slide 1.2s infinite ease-in-out;
+}
+
+@keyframes loading-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+/*# sourceMappingURL=loadingBar.css.map */

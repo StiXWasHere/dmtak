@@ -1,0 +1,30 @@
+/* loadingBar.css */
+
+@use "../../styles/variables" as *;
+
+
+.loading-bar {
+  width: 50%;
+  height: 6px;
+  background: $white;
+  border: 1px solid $black;
+  border-radius: .5rem;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.loading-bar-inner {
+  width: 40%;
+  height: 100%;
+  background: $red;
+  animation: loading-slide 1.2s infinite ease-in-out;
+}
+
+@keyframes loading-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}

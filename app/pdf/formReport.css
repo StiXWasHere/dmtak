@@ -1,12 +1,3 @@
-@page {
-  size: A4;
-  margin: 20mm;
-  font-size: 7pt;
-}
-* {
-  margin: 0.1rem;
-}
-
 html {
   font-size: 7pt;
 }
@@ -15,7 +6,6 @@ body {
   font-family: Arial, sans-serif;
   font-size: 7pt;
   color: #000;
-  margin-top: 1000px;
 }
 
 .pdf-form {
@@ -28,7 +18,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10pt;
-  page-break-inside: avoid;
 }
 
 .pdf-field {
@@ -57,7 +46,11 @@ body {
 
 .pdf-h2 {
   font-size: 14pt;
-  margin-bottom: 6pt;
+  margin-block: 6pt;
+}
+
+.header {
+  display: none;
 }
 
 /*# sourceMappingURL=formReport.css.map */
