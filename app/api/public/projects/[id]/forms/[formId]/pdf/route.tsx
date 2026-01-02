@@ -35,15 +35,16 @@ export async function GET(
   try {
     const page = await browser.newPage();
 
-    // Forward auth cookies to Playwright
+    // Forward auth cookies to Playwright. Use `url` instead of `domain` so
+    // cookies attach correctly regardless of environment (localhost vs prod).
     const cookieHeader = req.headers.get("cookie");
     if (cookieHeader) {
-      const cookies = cookieHeader.split(";").map(c => {
+      const cookies = cookieHeader.split(";").map((c) => {
         const [name, ...rest] = c.trim().split("=");
         return {
           name,
           value: rest.join("="),
-          domain: new URL(baseUrl).hostname,
+          url: baseUrl,
           path: "/",
         };
       });
