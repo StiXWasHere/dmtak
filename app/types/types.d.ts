@@ -10,7 +10,7 @@ type Project = {
     title: string;
     createdAt: number;
     forms: Form[];
-    ownerId: string;
+    ownerId?: string;
     ownerName?: string;
 }
 type Form = {
@@ -22,7 +22,7 @@ type Form = {
     generalSectionTitle: string;
     generalSection: FormField[];
     roofSides?: RoofSide[];
-    ownerId: string;
+    ownerId?: string;
     ownerName?: string;
 }
 type FormSection = {
