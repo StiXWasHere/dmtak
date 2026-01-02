@@ -32,7 +32,7 @@
   transform: translateY(0);
   pointer-events: auto;
   border-bottom: 1px solid rgba(0, 0, 0, 0.5);
-  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 2px 8px -8px rgba(0, 0, 0, 0.3);
 }
 .header-content-list li {
   padding: 0.8rem;
