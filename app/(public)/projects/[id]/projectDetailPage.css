@@ -6,10 +6,21 @@
   align-items: center;
   gap: 2rem;
   position: relative;
+  margin-top: 9rem;
 }
 .project-detail-page-forms {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+.project-detail-page-forms-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   gap: 1rem;
 }
 .project-detail-page-modal {

@@ -61,15 +61,15 @@ export default function CreateFormModal({ open, onClose, onSubmit }: Props) {
   return (
     <div className="form-modal" onClick={onClose}>
         <form className="form-modal-form"onClick={(e) => e.stopPropagation()}>
-          <h2>Create Form</h2>
+          <h2>Skapa formulär</h2>
 
-          {loading && <p>Loading templates…</p>}
+          {loading && <p>Laddar mallar…</p>}
           {error && <p>{error}</p>}
 
           {!loading && (
             <>
               <div className="vertical-div">
-                <label htmlFor="formTitle" >Form title</label>
+                <label htmlFor="formTitle" >Titel</label>
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -78,13 +78,13 @@ export default function CreateFormModal({ open, onClose, onSubmit }: Props) {
               </div>
 
               <div className="vertical-div">
-                <label htmlFor="formTemplate">Template</label>
+                <label htmlFor="formTemplate">Mall</label>
                 <select
                   value={templateId}
                   onChange={(e) => setTemplateId(e.target.value)}
                   name="formTemplate"
                 >
-                  <option value="">Select template</option>
+                  <option value="">Välj mall</option>
                   {templates.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.title}
@@ -98,14 +98,14 @@ export default function CreateFormModal({ open, onClose, onSubmit }: Props) {
                   onClick={onClose}
                   id="SubmitFormBtn"
                 >
-                  Cancel
+                  Avbryt
                 </button>
                 <button
                   onClick={handleSubmit}
                   id="SubmitFormBtn"
                   disabled={!title.trim() || !templateId}
                 >
-                  Create
+                  Skapa
                 </button>
               </div>
             </>

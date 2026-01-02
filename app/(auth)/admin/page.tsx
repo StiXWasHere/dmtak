@@ -14,6 +14,8 @@ export default function AdminPage() {
   const [userRole, setUserRole] = useState("admin");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
+  const [ firstName, setFirstName] = useState("");
+  const [ lastName, setLastName] = useState("");
 
   async function loadUsers() {
     const res = await fetch("/api/admin/users");
@@ -53,13 +55,15 @@ export default function AdminPage() {
     const res = await fetch("/api/admin/create-user", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, userRole }),
+      body: JSON.stringify({ email, password, userRole, firstName, lastName }),
     });
 
     if (res.ok) {
       setStatus("User created successfully!");
       setEmail("");
       setPassword("");
+      setFirstName("");
+      setLastName("");
       setUserRole("admin");
       loadUsers();
     } else {
@@ -105,6 +109,21 @@ export default function AdminPage() {
 
       <form className="create-user-form" onSubmit={createUser}>
         <h2 className="page-title-2">Skapa ny användare</h2>
+        <input type="text"
+          placeholder="Förnamn"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          name="firstName"
+          required
+        />
+        <input
+          type="text"
+          placeholder="Efternamn"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          name="lastName"
+          required
+        />
         <input
           type="email"
           placeholder="email"
@@ -143,6 +162,7 @@ export default function AdminPage() {
                   <p>
                       <strong>{u.emailAddresses[0]?.emailAddress}</strong>
                   </p>
+                  <p>{u.firstName} {u.lastName}</p>
                   <div className="users-list-item-role">
                     <label htmlFor={`role-${u.id}`}>Välj roll: </label>
                       <select

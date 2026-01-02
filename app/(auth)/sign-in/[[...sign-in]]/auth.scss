@@ -1,0 +1,61 @@
+@use '../../../styles/variables' as *;
+
+.auth-page {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: $white;
+}
+
+.clerk-root {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.clerk-card {
+  background: $white;
+  color: $black;
+  padding: 32px;
+  color: $black;
+}
+
+.clerk-title {
+  font-size: $medium-text;
+  font-weight: 600;
+}
+
+.clerk-subtitle {
+
+}
+
+.clerk-label {
+
+}
+
+.clerk-input {
+  background: $white;
+  border: 1px solid #2a2a2f;
+  color: $black;
+}
+
+.clerk-input:focus {
+  border-color: $grey-light;
+}
+
+.clerk-primary-btn {
+  background: $red;
+  border: none;
+  box-shadow: none !important;
+  font-weight: 500;
+}
+
+.clerk-primary-btn:hover {
+  background-color: $lighten-red;
+}
+
+.clerk-link {
+  color: $red;
+}

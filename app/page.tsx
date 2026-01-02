@@ -1,12 +1,15 @@
 import Image from "next/image";
 import './landingPage.css';
+import { currentUser } from "@clerk/nextjs/server";
 
-export default function Home() {
+export default async function Home() {
+  const user = await currentUser();
+
   return (
     <div className="landing">
       <main className="landing-page">
         <button id="NavBtn">
-          <a id="NavLink" href="/projects">Projekt</a>
+          {user ? <a id="NavLink" href="/projects">Projekt</a> : <a id="NavLink" href="/sign-in">Logga in</a>}    
         </button>
       </main>
     </div>

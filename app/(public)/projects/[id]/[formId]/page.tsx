@@ -23,7 +23,6 @@ export default function FormPage() {
 
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
-  const [stage, setStage] = useState<"idle" | "generating" | "rendering">("idle");
 
   const { setHeader } = useFormHeader();
 
@@ -196,11 +195,9 @@ export default function FormPage() {
   }, [form, projectId, formId, edits, localImages, storageKey]);
 
   const handlePdfGenerate = useCallback(async () => {
-    setStage("generating");
+    await handleSave();
     setGenerating(true);
     setGenerateError(null);
-
-    timerRef.current = window.setTimeout(() => setStage("rendering"), 2000);
 
     try {
       const res = await fetch(`/api/public/projects/${projectId}/forms/${formId}/pdf`,
@@ -232,7 +229,6 @@ export default function FormPage() {
         timerRef.current = null;
       }
       setGenerating(false);
-      setStage("idle");
     }
   }, [projectId, formId]);
 
@@ -277,7 +273,7 @@ export default function FormPage() {
   return (
       <div className="form-page">
         <h1>{form.title}</h1>
-        <p className="small-text">Skapad: {new Date(form.createdAt).toLocaleDateString("sv-SE")}</p>
+        <p className="small-text">Skapad: {new Date(form.createdAt).toLocaleDateString("sv-SE")} av {form.ownerName || "okänd"}</p>
 
         <h2>{form.generalSectionTitle}</h2>
         {form.generalSection?.map((field) => (
@@ -321,16 +317,6 @@ export default function FormPage() {
             Lägg till takfall
           </button>
         </form>
-
-        <button onClick={handleSave} id="SubmitFormBtn">
-          Spara formulär
-        </button>
-        
-        <button onClick={handlePdfGenerate} id="SubmitFormBtn" disabled={generating}>
-          {generating ? "Genererar PDF..." : "Generera PDF"}
-        </button>
-        {generating && <LoadingBar />}
-        {generateError && <p className="error-text">{generateError}</p>}
       </div>
   );
 }

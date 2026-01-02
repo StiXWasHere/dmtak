@@ -11,6 +11,7 @@ type Project = {
     createdAt: number;
     forms: Form[];
     ownerId: string;
+    ownerName?: string;
 }
 type Form = {
     id: string;
@@ -21,6 +22,8 @@ type Form = {
     generalSectionTitle: string;
     generalSection: FormField[];
     roofSides?: RoofSide[];
+    ownerId: string;
+    ownerName?: string;
 }
 type FormSection = {
     id: string;

@@ -8,12 +8,22 @@
     align-items: center;
     gap: 2rem;
     position: relative;
+    margin-top: 9rem;
 
     &-forms {
         display: flex;
         flex-direction: column;
+        justify-content: center;
+        align-items: center;
         gap: 1rem;
-        &-list {}
+        &-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+        }
     }
 
     &-modal {

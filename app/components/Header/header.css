@@ -1,4 +1,10 @@
 .header {
+  position: fixed;
+  top: 0;
+  width: 100vw;
+  z-index: 10000;
+}
+.header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -6,7 +12,7 @@
   padding-block: 1rem;
   padding-inline: 1rem;
 }
-.header-list {
+.header-content-list {
   position: fixed;
   top: 70;
   left: 0;
@@ -21,16 +27,18 @@
   pointer-events: none;
   transition: all 0.3s ease;
 }
-.header-list.open {
+.header-content-list.open {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.3);
 }
-.header-list li {
+.header-content-list li {
   padding: 0.8rem;
   padding-inline: 1.2rem;
 }
-.header-list li a {
+.header-content-list li a {
   text-decoration: none;
   color: rgb(254, 254, 254);
   display: block;
