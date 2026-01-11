@@ -18,9 +18,29 @@ const styles = StyleSheet.create({
     fontSize: 7,
     fontFamily: "Helvetica",
     color: "#000",
-    padding: 24,
+    // reserve space for header and footer so content won't overlap
+    paddingTop: 100,
+    paddingBottom: 70,
+    paddingHorizontal: 36,
   },
-
+  header: {
+    position: "absolute",
+    top: 20,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    alignItems: "center",
+  },
+    footer: {
+    position: "absolute",
+    bottom: 20,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    alignItems: "center",
+    fontSize: 8,
+    color: "#555",
+  },
   form: {
     gap: 16,
   },
@@ -49,18 +69,24 @@ const styles = StyleSheet.create({
 
   label: {
     fontWeight: "bold",
+    fontSize: 10,
   },
 
   img: {
-    width: 200,
+    width: 180,
     marginTop: 6,
   },
 });
 
 export default function FormPdf({ form }: Props) {
+  const logoUrl = `${process.env.APP_URL}/dmtaklogo.png`;
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        <View style={styles.header} fixed>
+          <Image src={logoUrl} style={{ width: 160 }} />
+        </View>
+        {/* Main content */}
         <View style={styles.form}>
           <Text style={styles.h1}>{form.type}</Text>
 
@@ -120,6 +146,15 @@ export default function FormPdf({ form }: Props) {
               ))}
             </View>
           ))}
+        </View>
+        {/* Footer with page number */}
+        <View
+          style={styles.footer}
+          fixed
+        >
+          <Text
+            render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`}
+          />
         </View>
       </Page>
     </Document>
