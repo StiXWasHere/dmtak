@@ -33,57 +33,120 @@ export async function GET(
 
   let browser: Browser | undefined;
 
-    try {
+  try {
+    console.log("PDF route start", { id, formId, isServerless, pdfPageUrl });
+
     const launchOptions: any = {
       headless: true,
       timeout: 15000,
     };
 
     if (isServerless) {
-      launchOptions.executablePath = await chromium.executablePath();
-      launchOptions.args = chromium.args;
+      try {
+        const execPath = await chromium.executablePath();
+        if (execPath) {
+          launchOptions.executablePath = execPath;
+          launchOptions.args = chromium.args;
+          console.log("Using @sparticuz/chromium executable and args");
+        } else {
+          console.warn("chromium.executablePath returned empty, will launch Playwright default");
+        }
+      } catch (e) {
+        console.warn("chromium.executablePath() failed, falling back to Playwright default", e);
+      }
     }
 
-    browser = await pwChromium.launch(launchOptions);
+    try {
+      browser = await pwChromium.launch(launchOptions);
+      console.log("Browser launched", { hasExecutable: Boolean(launchOptions.executablePath) });
+    } catch (launchErr) {
+      console.error("Initial browser launch failed", launchErr);
+      // fallback: try launching without custom executablePath/args
+      try {
+        browser = await pwChromium.launch({ headless: true, timeout: 15000 });
+        console.warn("Fallback browser launch succeeded (no custom executable)");
+      } catch (fallbackErr) {
+        console.error("Fallback browser launch failed", fallbackErr);
+        return new NextResponse(
+          "Failed to launch browser. Ensure Playwright browsers are installed (npx playwright install --with-deps)",
+          { status: 500 }
+        );
+      }
+    }
 
-    const page = await browser.newPage();
+    let page: any;
+    try {
+      page = await browser.newPage();
+      console.log("Created new page");
+    } catch (e) {
+      console.error("page.newPage() failed", e);
+      await browser.close().catch(() => {});
+      return new NextResponse("Failed to create browser page", { status: 500 });
+    }
 
     // forward cookies so Clerk auth works
     const cookieHeader = req.headers.get("cookie");
     if (cookieHeader) {
-      await page.context().addCookies(
-        cookieHeader.split(";").map((c) => {
-          const [name, ...rest] = c.trim().split("=");
-          return {
-            name,
-            value: rest.join("="),
-            url: baseUrl,
-          };
-        })
-      );
+      try {
+        await page.context().addCookies(
+          cookieHeader.split(";").map((c) => {
+            const [name, ...rest] = c.trim().split("=");
+            return {
+              name,
+              value: rest.join("="),
+              url: baseUrl,
+            } as any;
+          })
+        );
+        console.log("Added cookies to page context");
+      } catch (e) {
+        console.warn("addCookies failed, continuing without cookies:", e);
+      }
     }
 
-    await page.goto(pdfPageUrl, {
-      waitUntil: "networkidle",
-      timeout: 15000,
-    });
+    try {
+      await page.goto(pdfPageUrl, {
+        waitUntil: "networkidle",
+        timeout: 15000,
+      });
+      console.log("Page navigated to pdf page url");
+    } catch (e) {
+      console.error("page.goto failed", e);
+      await page.close().catch(() => {});
+      await browser.close().catch(() => {});
+      return new NextResponse("Failed to load PDF page", { status: 500 });
+    }
 
-    await page.emulateMedia({ media: "print" });
+    try {
+      // emulateMedia sometimes not available on some Playwright builds
+      // ts-expect-error - runtime API
+      await (page as any).emulateMedia({ media: "print" });
+      console.log("Emulated print media");
+    } catch (e) {
+      console.warn("emulateMedia not available or failed, continuing:", e);
+    }
 
     // wait for images
-    await page.evaluate(async () => {
-      await Promise.all(
-        Array.from(document.images).map((img) =>
-          img.complete
-            ? Promise.resolve()
-            : new Promise((res) => {
-                img.onload = img.onerror = res;
-              })
-        )
-      );
-    });
+    try {
+      await page.evaluate(async () => {
+        await Promise.all(
+          Array.from(document.images).map((img) =>
+            img.complete
+              ? Promise.resolve()
+              : new Promise((res) => {
+                  img.onload = img.onerror = res;
+                })
+          )
+        );
+      });
+      console.log("Images loaded or timed out");
+    } catch (e) {
+      console.warn("image load wait failed, continuing:", e);
+    }
 
-    const pdfBuffer = await page.pdf({
+    let pdfBuffer: any;
+    try {
+      pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
       displayHeaderFooter: true,
@@ -103,7 +166,14 @@ export async function GET(
           Page <span class="pageNumber"></span> of <span class="totalPages"></span>
         </div>
       `,
-    });
+      });
+      console.log("PDF generated, size:", (pdfBuffer as any).length ?? "unknown");
+    } catch (e) {
+      console.error("page.pdf() failed", e);
+      await page.close().catch(() => {});
+      await browser.close().catch(() => {});
+      return new NextResponse("Failed to generate PDF", { status: 500 });
+    }
 
     return new NextResponse(Uint8Array.from(pdfBuffer), {
       headers: {
