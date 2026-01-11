@@ -1,56 +1,127 @@
 // app/pdf/FormPdf.tsx
+import React from "react";
+import {
+  Page,
+  Text,
+  View,
+  Document,
+  StyleSheet,
+  Image,
+} from "@react-pdf/renderer";
 
 type Props = {
   form: Form;
 };
 
+const styles = StyleSheet.create({
+  page: {
+    fontSize: 7,
+    fontFamily: "Helvetica",
+    color: "#000",
+    padding: 24,
+  },
+
+  form: {
+    gap: 16,
+  },
+
+  section: {
+    gap: 10,
+    marginBottom: 16,
+  },
+
+  field: {
+    gap: 6,
+    marginBottom: 6,
+  },
+
+  h1: {
+    fontSize: 20,
+    marginBottom: 10,
+    fontWeight: "bold",
+  },
+
+  h2: {
+    fontSize: 14,
+    marginVertical: 6,
+    fontWeight: "bold",
+  },
+
+  label: {
+    fontWeight: "bold",
+  },
+
+  img: {
+    width: 200,
+    marginTop: 6,
+  },
+});
+
 export default function FormPdf({ form }: Props) {
   return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <View style={styles.form}>
+          <Text style={styles.h1}>{form.type}</Text>
 
-      <div className="pdf-form">
-        <h1 className="pdf-h1">{form.type}</h1>
+          {/* General section */}
+          <View style={styles.section}>
+            <Text style={styles.h2}>{form.title}</Text>
 
-        <div className="pdf-section">
-          <h2 className="pdf-h2">{form.title}</h2>
+            {form.generalSection.map((field) => (
+              <View key={field.fieldId} style={styles.field} wrap={false}>
+                <Text style={styles.label}>{field.title}:</Text>
 
-          {form.generalSection.map(field => (
-            <div key={field.fieldId} className="pdf-field">
-              <h3 className="pdf-label">{field.title}:</h3>
-              <span className="pdf-value">
-                Satus: {field.selected ?? "-"}
-              </span>
-              <p className="pdf-comment">Kommentar: {field.comment ?? ""}</p>
-              {field.imgUrl && (
-                <img className="pdf-img" src={field.imgUrl} alt="Bild saknas" />                      
-              )}
-            </div>
-          ))}
-        </div>
+                <Text>Status: {field.selected ?? "-"}</Text>
 
-        {form.roofSides && form.roofSides.map(side => (
-          <div key={side.id} className="section">
-            <h2 className="pdf-h1">{side.name}</h2>
+                {field.comment && (
+                  <Text>Kommentar: {field.comment}</Text>
+                )}
 
-            {side.sections.map(section => (
-              <div className="pdf-section" key={section.id}>
-                <h2 className="pdf-h2">{section.title}</h2>
-
-                {section.fields.map(field => (
-                  <div key={field.fieldId} className="pdf-field">
-                    <h3 className="pdf-label">{field.title}:</h3>
-                    <span className="pdf-value">
-                      Status: {field.selected ?? "-"}
-                    </span>
-                    <p className="pdf-comment">Kommentar: {field.comment ?? ""}</p>
-                    {field.imgUrl && (
-                      <img className="pdf-img" src={field.imgUrl} alt="Bild saknas" />                      
-                    )}
-                  </div>
-                ))}
-              </div>
+                {field.imgUrl && (
+                  <Image src={field.imgUrl} style={styles.img} />
+                )}
+              </View>
             ))}
-          </div>
-        ))}
-      </div>
+          </View>
+
+          {/* Roof sides */}
+          {form.roofSides?.map((side) => (
+            <View key={side.id} style={styles.section}>
+              <Text style={styles.h1}>{side.name}</Text>
+
+              {side.sections.map((section) => (
+                <View key={section.id} style={styles.section}>
+                  <Text style={styles.h2}>{section.title}</Text>
+
+                  {section.fields.map((field) => (
+                    <View
+                      key={field.fieldId}
+                      style={styles.field}
+                      wrap={false}
+                    >
+                      <Text style={styles.label}>{field.title}:</Text>
+
+                      <Text>Status: {field.selected ?? "-"}</Text>
+
+                      {field.comment && (
+                        <Text>Kommentar: {field.comment}</Text>
+                      )}
+
+                      {field.imgUrl && (
+                        <Image
+                          src={field.imgUrl}
+                          style={styles.img}
+                        />
+                      )}
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+          ))}
+        </View>
+      </Page>
+    </Document>
   );
 }

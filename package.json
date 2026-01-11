@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers npx playwright install && next build",
-    "postinstall": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers npx playwright install",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
@@ -13,6 +12,7 @@
     "@clerk/localizations": "^3.34.0",
     "@clerk/nextjs": "^6.36.7",
     "@playwright/test": "^1.57.0",
+    "@react-pdf/renderer": "^4.3.2",
     "@sparticuz/chromium": "^143.0.4",
     "cloudinary": "^2.8.0",
     "dotenv": "^17.2.3",
