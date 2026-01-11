@@ -4,9 +4,9 @@ import { db } from "@/lib/firebase";
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } } | { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params; // <-- await here
+  const { id } = await context.params;
 
   if (!id) {
     console.log("ID provided:", id);

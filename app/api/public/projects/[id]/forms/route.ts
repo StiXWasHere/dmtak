@@ -3,7 +3,10 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getAuth } from "@clerk/nextjs/server";
 
-export async function GET(req: NextRequest, context: { params: { id: string } } | { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const { id } = await context.params;
 
   const { userId } = getAuth(req);
