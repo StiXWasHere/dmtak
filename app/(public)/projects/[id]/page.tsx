@@ -95,8 +95,8 @@ export default function ProjectPage() {
           <h2>Formulär</h2>
           <ul className="project-detail-page-forms-list">
             {forms.map((form) => (
-              <Link key={form.id} href={`/projects/${projectId}/${form.id}`}>
-                <button id="NavBtnThin">{form.title}</button>
+              <Link key={form.id} href={`/projects/${projectId}/${form.id}`} id="NavNextLinkThin">
+                {form.title}
               </Link>
             ))}
           </ul>

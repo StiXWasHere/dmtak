@@ -62,7 +62,25 @@ input {
         cursor: pointer;
     }
 }
+#NavNextLink {
+    width: clamp(16rem, 40vw, 25rem);
+    height: clamp(5rem, 8vw, 8rem);
+    background-color: $red;
+    color: $white;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: .3rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: $large-text;
 
+    cursor: pointer;
+
+    &:hover {
+        background-color: $lighten-red;
+    }
+}
 #NavBtn {
     width: clamp(16rem, 40vw, 25rem);
     height: clamp(5rem, 8vw, 8rem);
@@ -71,6 +89,24 @@ input {
     border: none;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border-radius: .3rem;
+
+    cursor: pointer;
+
+    &:hover {
+        background-color: $lighten-red;
+    }
+}
+#NavNextLinkThin {
+    width: clamp(16rem, 40vw, 25rem);
+    height: clamp(3rem, 5vw, 5rem);
+    background-color: $red;
+    color: $white;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: .5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
     cursor: pointer;
 

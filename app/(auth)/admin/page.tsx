@@ -4,6 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import type { User } from "@clerk/nextjs/server";
 import "./adminPage.scss";
 import Spinner from "@/app/components/LoadingSpinner/LoadingSpinner";
+import Link from "next/link";
 
 export default function AdminPage() {
   const { user } = useUser();
@@ -181,10 +182,10 @@ export default function AdminPage() {
             ))
           )}        
       </div>
-          <div className="admin-forms-redirect">
-            <button id="SubmitFormBtn">
-              <a href="/admin/form">Skapa ny formulärmall</a>
-            </button>            
+          <div className="admin-forms-redirect">          
+            <Link href="/admin/form" id="NavNextLinkThin">
+              Skapa ny formulärmall
+            </Link>
           </div>
 
 

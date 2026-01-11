@@ -3,6 +3,7 @@ import { use, useEffect, useState } from "react";
 import './projectsPage.css'
 import CreateProjectModal from "@/app/components/ProjectModal/ProjectModal";
 import Spinner from "@/app/components/LoadingSpinner/LoadingSpinner";
+import Link from "next/link";
 
 function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -58,9 +59,9 @@ function ProjectsPage() {
             <ul className="projects-list">
               {projects.map((p) => (
                 <li key={p.id}>
-                  <button id="NavBtnThin">
-                    <a href={`/projects/${p.id}`}>{p.title}</a>                    
-                  </button>
+                  <Link href={`/projects/${p.id}`} id="NavNextLinkThin">
+                    {p.title}
+                  </Link>
                 </li>
               ))}
             </ul>
