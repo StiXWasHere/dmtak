@@ -35,7 +35,7 @@ export default function RootLayout({
       <html lang="sv">
         <head>
           <link rel="manifest" href="/manifest.json" />
-          <meta name="theme-color" content="#1D4ED8"/>
+          <meta name="theme-color" content="#dc042b"/>
           <meta name="mobile-web-app-capable" content="yes"/>
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
           <meta name="apple-mobile-web-app-title" content="DM TAK" />
