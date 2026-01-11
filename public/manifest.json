@@ -1,0 +1,21 @@
+{
+  "name": "DM TAK",
+  "short_name": "DM TAK",
+  "description": "Skapa och hantera formulär för takbesiktningar",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fefefe",
+  "theme_color": "#dc042b",
+  "icons": [
+    {
+      "src": "/dmtakicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/dmtakicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

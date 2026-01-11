@@ -1,7 +1,9 @@
 .header {
   position: fixed;
   top: 0;
-  width: 100vw;
+  left: 0;
+  right: 0;
+  width: 100%;
   z-index: 10000;
 }
 .header-content {
@@ -11,10 +13,11 @@
   background-color: rgb(220, 4, 43);
   padding-block: 1rem;
   padding-inline: 1rem;
+  position: relative;
 }
 .header-content-list {
-  position: fixed;
-  top: 70;
+  position: absolute;
+  top: 70px;
   left: 0;
   background-color: rgb(220, 4, 43);
   list-style: none;
