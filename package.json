@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers npx playwright install && next build",
     "postinstall": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers npx playwright install",
     "start": "next start",
     "lint": "eslint"
