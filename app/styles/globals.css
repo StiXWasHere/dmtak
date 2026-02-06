@@ -1,5 +1,5 @@
 :root {
-  --font-be-vietnam-pro: "Be Vietnam Pro", sans-serif;
+  --font-be-vietnam-pro: 'Be Vietnam Pro', sans-serif;
 }
 
 * {
@@ -84,6 +84,7 @@ input {
   justify-content: center;
   align-items: center;
   font-size: 32px;
+  text-align: center;
   cursor: pointer;
 }
 #NavNextLink:hover {
@@ -98,6 +99,7 @@ input {
   border: none;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border-radius: 0.3rem;
+  text-align: center;
   cursor: pointer;
 }
 #NavBtn:hover {
@@ -115,6 +117,7 @@ input {
   display: flex;
   justify-content: center;
   align-items: center;
+  text-align: center;
   cursor: pointer;
 }
 #NavNextLinkThin:hover {
@@ -129,6 +132,7 @@ input {
   border: none;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border-radius: 0.3rem;
+  text-align: center;
   cursor: pointer;
 }
 #NavBtnThin:hover {
@@ -155,7 +159,8 @@ select {
 .vertical-div {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   width: 100%;
 }

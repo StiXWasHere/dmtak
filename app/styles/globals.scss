@@ -74,6 +74,7 @@ input {
     justify-content: center;
     align-items: center;
     font-size: $large-text;
+    text-align: center;
 
     cursor: pointer;
 
@@ -89,6 +90,7 @@ input {
     border: none;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border-radius: .3rem;
+    text-align: center;
 
     cursor: pointer;
 
@@ -107,6 +109,7 @@ input {
     display: flex;
     justify-content: center;
     align-items: center;
+    text-align: center;
 
     cursor: pointer;
 
@@ -122,6 +125,7 @@ input {
     border: none;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border-radius: .3rem;
+    text-align: center;
 
     cursor: pointer;
 
@@ -147,7 +151,8 @@ select {
 .vertical-div {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
     gap: 0.5rem;
     width: 100%;
 }
