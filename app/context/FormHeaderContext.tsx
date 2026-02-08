@@ -8,11 +8,15 @@ type FormHeaderContextType = {
   onSave?: () => void;
   onGeneratePdf?: () => void;
   setHeader?: (newState: Partial<FormHeaderContextType>) => void;
+  saving: boolean;
+  generating: boolean;
 };
 
 const FormHeaderContext = createContext<FormHeaderContextType>({
   showSave: false,
   showGenerate: false,
+  saving: false,
+  generating: false,
 });
 
 export const useFormHeader = () => useContext(FormHeaderContext);
@@ -21,6 +25,8 @@ export const FormHeaderProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<FormHeaderContextType>({
     showSave: false,
     showGenerate: false,
+    saving: false,
+    generating: false,
   });
 
   const setHeader = useCallback((newState: Partial<FormHeaderContextType>) => {

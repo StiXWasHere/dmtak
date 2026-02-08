@@ -13,9 +13,10 @@ import {
 } from '@clerk/nextjs'
 import './header.css'
 import { useFormHeader } from '@/app/context/FormHeaderContext';
+import Spinner from '../LoadingSpinner/LoadingSpinner';
 
 function Header() {
-  const { showSave, onSave, showGenerate, onGeneratePdf } = useFormHeader();
+  const { showSave, onSave, showGenerate, onGeneratePdf, saving, generating } = useFormHeader();
 
   const { user } = useUser();
 
@@ -39,8 +40,20 @@ function Header() {
         <ul className={`header-content-list ${open ? "open" : ""}`}>
             <li><a href="/">Start</a></li>
 
-            {showSave && (<li><a onClick={onSave}>Spara</a></li>)}
-            {showGenerate && (<li><a onClick={onGeneratePdf}>Generera PDF</a></li>)}
+            {showSave && (
+              <li>
+                <a className='header-content-list-tag' onClick={onSave}>
+                  {saving ? <Spinner size={20} /> : 'Spara'}
+                </a>
+              </li>
+            )}
+            {showGenerate && (
+              <li>
+                <a className='header-content-list-tag' onClick={onGeneratePdf}>
+                  {generating ? <Spinner size={20} /> : 'Generera PDF'}
+                </a>
+              </li>
+            )}
 
             <li>
               <SignedOut>
@@ -73,8 +86,20 @@ function Header() {
         <ul className={`header-content-list ${open ? "open" : ""}`}>
             <li><a href="/">Start</a></li>
 
-            {showSave && (<li><a onClick={onSave}>Spara</a></li>)}
-            {showGenerate && (<li><a onClick={onGeneratePdf}>Generera PDF</a></li>)}
+            {showSave && (
+              <li>
+                <a className='header-content-list-tag' onClick={onSave}>
+                  {saving ? <Spinner size={20} /> : 'Spara'}
+                </a>
+              </li>
+            )}
+            {showGenerate && (
+              <li>
+                <a className='header-content-list-tag' onClick={onGeneratePdf}>
+                  {generating ? <Spinner size={20} /> : 'Generera PDF'}
+                </a>
+              </li>
+            )}
 
             {role === 'admin' && <li><a href="/admin">Admin</a></li>}
             <li>

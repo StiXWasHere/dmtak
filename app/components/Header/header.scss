@@ -33,6 +33,12 @@
             pointer-events: none; // prevent clicks when closed
             transition: all 0.3s ease;
 
+            &-tag {
+                display: flex;
+                align-items: center;
+                justify-content: end;
+            }
+
             &.open {
                 opacity: 1;
                 transform: translateY(0);
@@ -48,7 +54,6 @@
                 a {
                     text-decoration: none;
                     color: $white;
-                    display: block;
                 }
             }
         }            

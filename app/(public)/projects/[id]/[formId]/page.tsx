@@ -21,6 +21,7 @@ export default function FormPage() {
   const [localImages, setLocalImages] = useState<{ [fieldId: string]: File | null }>({});
   const [loading, setLoading] = useState(true);
 
+  const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
 
@@ -145,6 +146,7 @@ export default function FormPage() {
 
   const handleSave = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
+    setHeader?.({ saving: true });
     if (!form) return;
 
     // 1. Merge all fields with edits + mark which ones have new images
@@ -184,10 +186,11 @@ export default function FormPage() {
 
       const saved: Form = await res.json();
 
+      setHeader?.({ saving: false });
+
       setForm(saved);
       localStorage.removeItem(storageKey);
       setLocalImages({});
-      alert("Form saved successfully");
     } catch (err: any) {
       console.error("Save failed:", err);
       alert(err.message || "Failed to save form");
@@ -196,7 +199,7 @@ export default function FormPage() {
 
   const handlePdfGenerate = useCallback(async () => {
     await handleSave();
-    setGenerating(true);
+    setHeader?.({ generating: true });
     setGenerateError(null);
 
     try {
@@ -228,7 +231,7 @@ export default function FormPage() {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
-      setGenerating(false);
+      setHeader?.({ generating: false, saving: false });
     }
   }, [projectId, formId]);
 

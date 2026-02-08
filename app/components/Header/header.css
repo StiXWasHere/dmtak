@@ -30,6 +30,11 @@
   pointer-events: none;
   transition: all 0.3s ease;
 }
+.header-content-list-tag {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+}
 .header-content-list.open {
   opacity: 1;
   transform: translateY(0);
@@ -44,7 +49,6 @@
 .header-content-list li a {
   text-decoration: none;
   color: rgb(254, 254, 254);
-  display: block;
 }
 
 #Logo {
