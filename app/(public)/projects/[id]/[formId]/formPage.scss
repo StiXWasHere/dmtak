@@ -90,6 +90,20 @@
     gap: 2rem;
   }
 }
+.section-toggle {
+  padding-inline: 1rem;
+  padding-block: .3rem;
+  border: none;
+  border-radius: .2rem;
+  color: $white;
+  background-color: $red;
+  font-size: $small-text;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $lighten-red;
+  }
+}
 .add-roof-form {
     display: flex;
     flex-direction: column;
@@ -120,6 +134,9 @@
   border-radius: .2rem;
   color: $white;
   background-color: $red;
+  font-size: $medium-text;
+  font-weight: bold;
+  cursor: pointer;
 
   &:hover {
     background-color: $lighten-red;
