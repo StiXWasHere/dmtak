@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     generalSection: template.generalSection.map(f => ({
       title: f.title,
       fieldId: f.fieldId,
-      options: ['Godkänt', 'Ej godkänt', 'Ej aktuellt', 'Avhjälpt'],
+      options: ['Godkänt', 'Ej godkänt', 'Ej aktuellt', 'Avhjälpt', 'Ej utförd'],
       comment: '',
       imgUrl: ''
     }))

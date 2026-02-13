@@ -39,7 +39,7 @@ export const FieldItem = React.memo(({ field, edits, localImages, saveOption, sa
 
       {field.options && (
         <div className="form-page-ul-li-input">
-          {field.options.map((option: 'Godkänt'| 'Ej godkänt'| 'Ej aktuellt' | 'Avhjälpt') => (
+          {field.options.map((option: 'Godkänt'| 'Ej godkänt'| 'Ej aktuellt' | 'Avhjälpt' | 'Ej utförd') => (
             <label key={option} className="radio-label">
               <input
                 type="radio"

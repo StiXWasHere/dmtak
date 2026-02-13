@@ -16,7 +16,7 @@ type Project = {
 type Form = {
     id: string;
     title: string;
-    type: 'Delbesiktning' | 'Slutbesiktning' | 'Egenkontroll' | 'Takfall';
+    type: 'Delbesiktning' | 'Slutbesiktning' | 'Egenkontroll' | 'Takfall' | 'Besiktningsutlåtande';
     createdAt: number;
     projectId: string;
     generalSectionTitle: string;
@@ -33,7 +33,7 @@ type FormSection = {
 type FormField = {
     title: string;
     fieldId: string;
-    options?: Array<'Godkänt', 'Ej godkänt', 'Ej aktuellt', 'Avhjälpt'>;
+    options?: Array<'Godkänt'| 'Ej godkänt'| 'Ej aktuellt'| 'Avhjälpt'| 'Ej utförd'>;
     selected?: string;
     comment?: string;
     imgUrl?: string;
@@ -46,7 +46,7 @@ type RoofSide = {
 type FormTemplate = {
     id: string;
     title: string;
-    type: 'Delbesiktning' | 'Slutbesiktning' | 'Egenkontroll';
+    type: 'Delbesiktning' | 'Slutbesiktning' | 'Egenkontroll' | 'Besiktningsutlåtande';
     generalSectionTitle: string;
     generalSection: FormFieldTemplate[];
     createdAt: number;

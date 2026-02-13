@@ -63,6 +63,7 @@ export default function CreateFormTemplatePage() {
           <option value="Delbesiktning">Delbesiktning</option>
           <option value="Slutbesiktning">Slutbesiktning</option>
           <option value="Egenkontroll">Egenkontroll</option>
+          <option value="Besiktningsutlåtande">Besiktningsutlåtande</option>
         </select>
 
         <input

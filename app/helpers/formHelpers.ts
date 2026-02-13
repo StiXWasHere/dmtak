@@ -6,10 +6,11 @@ type FormFieldWithLocalImage = FormField & { _hasLocalImage?: boolean };
 
 const defaultFieldOptions = [
   "Godkänt",
-  "Ej Godkänt",
-  "Ej Aktuellt",
-  "Avhjälpt"
-]
+  "Ej godkänt",
+  "Ej aktuellt",
+  "Avhjälpt",
+  "Ej utförd"
+] as const; // Define as const to get literal types
 
 // Create a new roof side with unique IDs
 export const createRoofSide = (name?: string, existingCount?: number): RoofSide => ({
@@ -22,7 +23,7 @@ export const createRoofSide = (name?: string, existingCount?: number): RoofSide 
     fields: sec.fields.map((f) => ({ 
       ...f, 
       fieldId: uuid(),
-      options: f.options ?? defaultFieldOptions
+      options: f.options ?? [...defaultFieldOptions]
     })),
   })),
 });

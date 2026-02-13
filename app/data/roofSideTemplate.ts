@@ -215,6 +215,40 @@ export const roofSideTemplate: RoofSide = {
         }
       ]
     },
+        {
+      id: "Vindskivor",
+      title: "Vindskivor",
+      fields: [
+        {
+          title: "45x45mm reglar är monterade under språnget längs gavlarna och synliga delar av 45x45 regeln är färdigmålade",
+          fieldId: "Vindskivor1"
+        },
+        {
+          title: "Trekantslisten är skruvad ca cc 500mm med 75mm trallskruv som skruvas igenom råsponten in till 45x45 regeln undertill",
+          fieldId: "Vindskivor2"
+        },
+        {
+          title: "Översta vindskivan har monterats i rätt höjd för att gavelbeslaget inte skall tryckas upp av pannorna",
+          fieldId: "Vindskivor3"
+        },
+        {
+          title: "Vinskivorna är ej spruckna eller har stora glipor vid skarvarna",
+          fieldId: "Vindskivor4"
+        },
+        {
+          title: "Skruvhål och skarvar är fogade med akrylfog för utomhusbruk och bättringsmålats över. (OBS! Akrylfog får ej användas där slamfärg såsom faluröd eller trälasyr använts.)",
+          fieldId: "Vindskivor5"
+        },
+        {
+          title: "Skarv vid nock är utfört med lodrätt skarv (ej norsk skarv.)",
+          fieldId: "Vindskivor6"
+        },
+        {
+          title: "Skarvbitar är inte kortare än 1000mm",
+          fieldId: "Vindskivor7"
+        }
+      ]
+    },
     {
       id: "Takpannor",
       title: "Takpannor",

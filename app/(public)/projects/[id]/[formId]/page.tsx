@@ -21,8 +21,6 @@ export default function FormPage() {
   const [localImages, setLocalImages] = useState<{ [fieldId: string]: File | null }>({});
   const [loading, setLoading] = useState(true);
 
-  const [saving, setSaving] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
 
   const { setHeader } = useFormHeader();
