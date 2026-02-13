@@ -13,6 +13,7 @@ import Header from './components/Header/Header';
 import { Client } from '@clerk/nextjs/server';
 import { FormHeaderProvider } from './context/FormHeaderContext';
 import { svSE } from "@clerk/localizations";
+import Footer from './components/Footer/Footer';
 
 const beVietnamPro = Be_Vietnam_Pro({
   weight: ['400', '500', '600'], // choose the weights you need
@@ -45,6 +46,7 @@ export default function RootLayout({
           <FormHeaderProvider>
             <Header />
             {children}
+            <Footer />
           </FormHeaderProvider>
         </body>
       </html>

@@ -1,5 +1,6 @@
 :root {
   --font-be-vietnam-pro: "Be Vietnam Pro", sans-serif;
+  --footer-height: 3.5rem;
 }
 
 * {
@@ -12,6 +13,10 @@ body {
   color: rgb(15, 15, 15);
   background-color: rgb(254, 254, 254);
   font-family: var(--font-be-vietnam-pro), sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: var(--footer-height);
 }
 
 button {
