@@ -66,7 +66,7 @@ function ProjectsPage() {
               ))}
             </ul>
           )}
-          <button id="NavBtnThin" onClick={() => setOpen(true)}>
+          <button id="SubmitFormBtn" onClick={() => setOpen(true)}>
             Skapa projekt
           </button>
           <CreateProjectModal

@@ -118,7 +118,7 @@ export default function ProjectPage() {
           onSubmit={({ title, templateId }) => createForm(title, templateId)}
         />
       </div>
-      <p className="small-text">Skapad: {new Date(project.createdAt).toLocaleDateString("sv-SE")}</p>
+      <p className="small-text">Skapad: {new Date(project.createdAt).toLocaleDateString("sv-SE")} av {project.ownerName || "okänd"}</p>
     </div>
   );
 }
