@@ -2,6 +2,7 @@
 
 import React, {useState, useRef} from "react";
 import { FieldItem } from "@/app/components/FieldItem/FieldItem";
+import WarningModal from "@/app/components/WarningModal/WarningModal";
 
 interface RoofSideSectionProps {
   roofSide: RoofSide;
@@ -10,6 +11,9 @@ interface RoofSideSectionProps {
   saveOption: (fieldId: string, option: string) => void;
   saveComment: (fieldId: string, comment: string) => void;
   saveImage: (fieldId: string, file: File) => void;
+  projectId: string;
+  formId: string;
+  onRoofSideDeleted: () => void;
 }
 
 export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
@@ -19,9 +23,14 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
   saveOption,
   saveComment,
   saveImage,
+  projectId,
+  formId,
+  onRoofSideDeleted,
 }) => {
   const [hidden, setHidden] = useState(false);
   const [openSectionId, setOpenSectionId] = useState(null as string | null);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Create refs for each section
   const sectionRefs = useRef<{ [id: string]: HTMLDivElement | null }>({});
@@ -44,10 +53,49 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
     }
   };
 
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowDeleteModal(false);
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/public/projects/${projectId}/forms/${formId}/roof-sides/${roofSide.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to delete roof side');
+      }
+
+      onRoofSideDeleted();
+    } catch (error) {
+      console.error('Error deleting roof side:', error);
+      alert('Failed to delete roof side. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+  };
+
   return (
     <div className="roof-side">
       <h3 className="page-title-1">{roofSide.name}</h3>
-      <button id="HideFormBtn" type="button" onClick={() => setHidden((v) => !v)}>{hidden ? "Visa" : "Dölj"}</button>
+      <div className="roof-side-controls">
+        <button id="HideFormBtn" type="button" onClick={() => setHidden((v) => !v)}>{hidden ? "Visa" : "Dölj"}</button>
+        <button 
+          type="button" 
+          onClick={handleDeleteClick} 
+          disabled={deleting}
+          className="delete-roof-side-btn"
+        >
+          {deleting ? "Raderar..." : "Radera takfall"}
+        </button>
+      </div>
       {!hidden && 
         roofSide.sections.map((section) => {
           const isOpen = openSectionId === section.id;
@@ -87,6 +135,15 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
           );
         })
       }
+      <WarningModal
+        open={showDeleteModal}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Radera takfall"
+        message={`Är du säker på att du vill radera takfallet "${roofSide.name}"? Denna åtgärd kan inte ångras.`}
+        confirmText="Bekräfta"
+        cancelText="Avbryt"
+      />
     </div>
   );
 };

@@ -28,51 +28,51 @@ export default function FormPage() {
   const timerRef = useRef<number | null>(null);
   const storageKey = `form-edits-${projectId}-${formId}`;
 
+  const fetchForm = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/public/projects/${projectId}/forms/${formId}`);
+      if (!res.ok) throw new Error("Failed to load form");
+      const data: Form = await res.json();
+      setForm(data);
+
+      const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+
+      // Initialize edits from DB + localStorage
+      const initialEdits: FormEdits = {};
+      data.generalSection.forEach((f) => {
+        initialEdits[f.fieldId] = {
+          selected: f.selected || saved[f.fieldId]?.selected || "",
+          comment: f.comment || saved[f.fieldId]?.comment || "",
+          imgUrl: f.imgUrl || saved[f.fieldId]?.imgUrl || "",
+        };
+      });
+      data.roofSides?.forEach((side) =>
+        side.sections.forEach((section) =>
+          section.fields.forEach((f) => {
+            initialEdits[f.fieldId] = {
+              selected: f.selected || saved[f.fieldId]?.selected || "",
+              comment: f.comment || saved[f.fieldId]?.comment || "",
+              imgUrl: f.imgUrl || saved[f.fieldId]?.imgUrl || "",
+            };
+          })
+        )
+      );
+      setEdits(initialEdits);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Failed to load form");
+    } finally {
+      setLoading(false);
+    }
+  }, [projectId, formId, storageKey]);
+
   // --- Load form and initialize edits ---
   useEffect(() => {
     if (!projectId || !formId) return;
 
-    const fetchForm = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/public/projects/${projectId}/forms/${formId}`);
-        if (!res.ok) throw new Error("Failed to load form");
-        const data: Form = await res.json();
-        setForm(data);
-
-        const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
-
-        // Initialize edits from DB + localStorage
-        const initialEdits: FormEdits = {};
-        data.generalSection.forEach((f) => {
-          initialEdits[f.fieldId] = {
-            selected: f.selected || saved[f.fieldId]?.selected || "",
-            comment: f.comment || saved[f.fieldId]?.comment || "",
-            imgUrl: f.imgUrl || saved[f.fieldId]?.imgUrl || "",
-          };
-        });
-        data.roofSides?.forEach((side) =>
-          side.sections.forEach((section) =>
-            section.fields.forEach((f) => {
-              initialEdits[f.fieldId] = {
-                selected: f.selected || saved[f.fieldId]?.selected || "",
-                comment: f.comment || saved[f.fieldId]?.comment || "",
-                imgUrl: f.imgUrl || saved[f.fieldId]?.imgUrl || "",
-              };
-            })
-          )
-        );
-        setEdits(initialEdits);
-      } catch (err: any) {
-        console.error(err);
-        alert(err.message || "Failed to load form");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchForm();
-  }, [projectId, formId]);
+  }, [projectId, formId, fetchForm]);
 
   // --- Autosave edits to localStorage ---
   useEffect(() => {
@@ -299,6 +299,12 @@ export default function FormPage() {
             saveOption={saveOption}
             saveComment={saveComment}
             saveImage={saveImage}
+            projectId={projectId as string}
+            formId={formId as string}
+            onRoofSideDeleted={() => {
+              // Refetch the form after deletion
+              fetchForm();
+            }}
           />
         ))}
 
