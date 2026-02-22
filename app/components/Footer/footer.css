@@ -9,16 +9,24 @@
 }
 .footer-container {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   height: 100%;
-  padding-inline: 1.5rem;
+  padding-inline: 2.5rem;
   gap: 1rem;
   background-color: rgb(220, 4, 43);
 }
 
+.footer-save {
+  color: rgb(254, 254, 254);
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
 #FooterIcon {
   color: rgb(254, 254, 254);
-  font-size: 1.5rem;
+  font-size: 2rem;
   border: none;
   background: none;
 }
