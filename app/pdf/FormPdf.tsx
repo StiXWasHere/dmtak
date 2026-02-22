@@ -72,6 +72,21 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
 
+  statusApproved: {
+    color: "green",
+    fontSize: 10,
+  },
+
+  statusRejected: {
+    color: "red",
+    fontSize: 10,
+  },
+
+  status: {
+    color: "#000",
+    fontSize: 10,
+  },
+
   img: {
     width: 180,
     marginTop: 6,
@@ -94,11 +109,32 @@ export default function FormPdf({ form }: Props) {
           <View style={styles.section}>
             <Text style={styles.h2}>{form.title}</Text>
 
-            {form.generalSection.map((field) => (
+            {form.generalSection
+              .filter((field) => field.selected)
+              .map((field) => (
               <View key={field.fieldId} style={styles.field} wrap={false}>
                 <Text style={styles.label}>{field.title}:</Text>
 
-                <Text>Status: {field.selected ?? "-"}</Text>
+                {field.selected ? (
+                  <Text
+                    style={
+                      field.selected === "Godkänt" || field.selected === "Avhjälpt"
+                        ? styles.statusApproved
+                        : field.selected === "Ej godkänt"
+                        ? styles.statusRejected
+                        : styles.status
+                    }
+                  >
+                    {field.selected === "Godkänt" || field.selected === "Avhjälpt"
+                      ? "OK "
+                      : field.selected === "Ej godkänt"
+                      ? "X "
+                      : ""}
+                    Status: {field.selected}
+                  </Text>
+                ) : (
+                  <Text style={styles.status}>Status: -</Text>
+                )}
 
                 {field.comment && (
                   <Text>Kommentar: {field.comment}</Text>
@@ -116,11 +152,15 @@ export default function FormPdf({ form }: Props) {
             <View key={side.id} style={styles.section}>
               <Text style={styles.h1}>{side.name}</Text>
 
-              {side.sections.map((section) => (
+              {side.sections
+                .filter((section) => section.fields.some((field) => field.selected))
+                .map((section) => (
                 <View key={section.id} style={styles.section}>
                   <Text style={styles.h2}>{section.title}</Text>
 
-                  {section.fields.map((field) => (
+                  {section.fields
+                    .filter((field) => field.selected)
+                    .map((field) => (
                     <View
                       key={field.fieldId}
                       style={styles.field}
@@ -128,7 +168,26 @@ export default function FormPdf({ form }: Props) {
                     >
                       <Text style={styles.label}>{field.title}:</Text>
 
-                      <Text>Status: {field.selected ?? "-"}</Text>
+                      {field.selected ? (
+                        <Text
+                          style={
+                            field.selected === "Godkänt" || field.selected === "Avhjälpt"
+                              ? styles.statusApproved
+                              : field.selected === "Ej godkänt"
+                              ? styles.statusRejected
+                              : styles.status
+                          }
+                        >
+                          {field.selected === "Godkänt" || field.selected === "Avhjälpt"
+                            ? "OK "
+                            : field.selected === "Ej godkänt"
+                            ? "X "
+                            : ""}
+                          Status: {field.selected}
+                        </Text>
+                      ) : (
+                        <Text style={styles.status}>Status: -</Text>
+                      )}
 
                       {field.comment && (
                         <Text>Kommentar: {field.comment}</Text>
