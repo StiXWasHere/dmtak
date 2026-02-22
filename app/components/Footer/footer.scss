@@ -11,12 +11,20 @@
 
     &-container {
         display: flex;
+        justify-content: space-between;
         align-items: center;
         height: 100%;
         padding-inline: 2.5rem;
         gap: 1rem;
         background-color: $red;
     }
+}
+
+.footer-save {
+    color: $white;
+    border: none;
+    background: none;
+    cursor: pointer;
 }
 
 #FooterIcon {
