@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { collection, doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { getAuth } from "@clerk/nextjs/server";
+import { getAuth, clerkClient } from "@clerk/nextjs/server";
 
 export async function POST(req: NextRequest) {
   const { userId } = getAuth(req);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // ensure admin role
+  const client = await clerkClient();
+  const caller = await client.users.getUser(userId);
+  if (caller.publicMetadata.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const body = await req.json();
   const { title, type, generalSectionTitle, generalSection } = body as {
