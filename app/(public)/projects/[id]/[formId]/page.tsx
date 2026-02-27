@@ -10,7 +10,6 @@ import {
   buildUpdatedRoofSides,
 } from "@/app/helpers/formHelpers";
 import "./formPage.css";
-import LoadingBar from "@/app/components/LoadingBar/LoadingBar";
 import Spinner from "@/app/components/LoadingSpinner/LoadingSpinner";
 import { useFormHeader } from "@/app/context/FormHeaderContext";
 
@@ -27,13 +26,32 @@ export default function FormPage() {
 
   const timerRef = useRef<number | null>(null);
   const storageKey = `form-edits-${projectId}-${formId}`;
+  // keep a copy of the whole form object as well – roof sides (and other
+  // structural changes) weren't being written to edits, so they vanished when
+  // the page re‑loaded.  we'll sync this key whenever `form` changes and
+  // restore it when we fetch from the server.
+  const formStorageKey = `form-data-${projectId}-${formId}`;
 
   const fetchForm = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/public/projects/${projectId}/forms/${formId}`);
       if (!res.ok) throw new Error("Failed to load form");
-      const data: Form = await res.json();
+      let data: Form = await res.json();
+
+      // restore any previously‑saved form structure (roof sides, titles, …)
+      const savedForm = localStorage.getItem(formStorageKey);
+      if (savedForm) {
+        try {
+          const parsed: Form = JSON.parse(savedForm);
+          // merge with the fresh data, but favour the server for generalSection
+          // since we already rebuild edits from that below.
+          data = { ...data, roofSides: parsed.roofSides || data.roofSides };
+        } catch (err) {
+          console.warn("could not parse saved form from storage", err);
+        }
+      }
+
       setForm(data);
 
       const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
@@ -78,6 +96,13 @@ export default function FormPage() {
   useEffect(() => {
     if (!loading) localStorage.setItem(storageKey, JSON.stringify(edits));
   }, [edits, loading]);
+
+  // --- Persist structural changes (roof sides, name changes, etc.) ---
+  useEffect(() => {
+    if (!loading && form) {
+      localStorage.setItem(formStorageKey, JSON.stringify(form));
+    }
+  }, [form, loading, formStorageKey]);
 
   // --- Handlers ---
   const saveOption = useCallback((fieldId: string, option: string) => {
@@ -188,6 +213,7 @@ export default function FormPage() {
 
       setForm(saved);
       localStorage.removeItem(storageKey);
+      localStorage.removeItem(formStorageKey);
       setLocalImages({});
     } catch (err: any) {
       console.error("Save failed:", err);
