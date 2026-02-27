@@ -17,6 +17,7 @@ export const createRoofSide = (name?: string, existingCount?: number): RoofSide 
   ...roofSideTemplate,
   id: uuid(),
   name: name || `Tak ${existingCount ? existingCount + 1 : 1}`,
+  _isLocal: true,
   sections: roofSideTemplate.sections.map((sec) => ({
     ...sec,
     id: uuid(),
@@ -60,13 +61,18 @@ export function buildUpdatedRoofSides(
 ): RoofSide[] | undefined {
   if (!roofSides) return undefined;
 
-  return roofSides.map((side) => ({
-    ...side,
-    sections: side.sections.map((section) => ({
-      ...section,
-      fields: section.fields.map((f) => mergeFieldForSave(f, editsMap[f.fieldId], localImagesMap)),
-    })),
-  }));
+  // strip _isLocal flag before sending to backend
+  return roofSides.map((side) => {
+    const cleanSide: RoofSide = { ...side };
+    delete (cleanSide as any)._isLocal;
+    return {
+      ...cleanSide,
+      sections: side.sections.map((section) => ({
+        ...section,
+        fields: section.fields.map((f) => mergeFieldForSave(f, editsMap[f.fieldId], localImagesMap)),
+      })),
+    };
+  });
 }
 
 // Optional helper: convert a File to base64 (used only if needed before Cloudinary upload)

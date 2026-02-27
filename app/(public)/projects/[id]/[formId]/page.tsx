@@ -25,6 +25,7 @@ export default function FormPage() {
   const { setHeader } = useFormHeader();
 
   const timerRef = useRef<number | null>(null);
+  const autoSaveTimerRef = useRef<number | null>(null);
   const storageKey = `form-edits-${projectId}-${formId}`;
   // keep a copy of the whole form object as well – roof sides (and other
   // structural changes) weren't being written to edits, so they vanished when
@@ -40,13 +41,20 @@ export default function FormPage() {
       let data: Form = await res.json();
 
       // restore any previously‑saved form structure (roof sides, titles, …)
+      // only keep local roof sides that the server hasn’t already discarded.
       const savedForm = localStorage.getItem(formStorageKey);
       if (savedForm) {
         try {
           const parsed: Form = JSON.parse(savedForm);
-          // merge with the fresh data, but favour the server for generalSection
-          // since we already rebuild edits from that below.
-          data = { ...data, roofSides: parsed.roofSides || data.roofSides };
+          if (parsed.roofSides) {
+            const serverSides = data.roofSides || [];
+            const existingIds = new Set(serverSides.map((s) => s.id));
+            // only carry over sides that were created locally (_isLocal flag)
+            const newLocals = parsed.roofSides.filter(
+              (s: RoofSide) => (s as any)._isLocal && !existingIds.has(s.id)
+            );
+            data = { ...data, roofSides: [...serverSides, ...newLocals] };
+          }
         } catch (err) {
           console.warn("could not parse saved form from storage", err);
         }
@@ -57,21 +65,22 @@ export default function FormPage() {
       const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
 
       // Initialize edits from DB + localStorage
+      // localStorage takes priority so recent unsaved changes aren't overwritten
       const initialEdits: FormEdits = {};
       data.generalSection.forEach((f) => {
         initialEdits[f.fieldId] = {
-          selected: f.selected || saved[f.fieldId]?.selected || "",
-          comment: f.comment || saved[f.fieldId]?.comment || "",
-          imgUrl: f.imgUrl || saved[f.fieldId]?.imgUrl || "",
+          selected: saved[f.fieldId]?.selected || f.selected || "",
+          comment: saved[f.fieldId]?.comment || f.comment || "",
+          imgUrl: saved[f.fieldId]?.imgUrl || f.imgUrl || "",
         };
       });
       data.roofSides?.forEach((side) =>
         side.sections.forEach((section) =>
           section.fields.forEach((f) => {
             initialEdits[f.fieldId] = {
-              selected: f.selected || saved[f.fieldId]?.selected || "",
-              comment: f.comment || saved[f.fieldId]?.comment || "",
-              imgUrl: f.imgUrl || saved[f.fieldId]?.imgUrl || "",
+              selected: saved[f.fieldId]?.selected || f.selected || "",
+              comment: saved[f.fieldId]?.comment || f.comment || "",
+              imgUrl: saved[f.fieldId]?.imgUrl || f.imgUrl || "",
             };
           })
         )
@@ -83,7 +92,7 @@ export default function FormPage() {
     } finally {
       setLoading(false);
     }
-  }, [projectId, formId, storageKey]);
+  }, [projectId, formId, storageKey, formStorageKey]);
 
   // --- Load form and initialize edits ---
   useEffect(() => {
@@ -100,9 +109,12 @@ export default function FormPage() {
   // --- Persist structural changes (roof sides, name changes, etc.) ---
   useEffect(() => {
     if (!loading && form) {
+      // persist the full form object including _isLocal flags so that
+      // locally-created sides can be detected and restored on reload
       localStorage.setItem(formStorageKey, JSON.stringify(form));
     }
   }, [form, loading, formStorageKey]);
+
 
   // --- Handlers ---
   const saveOption = useCallback((fieldId: string, option: string) => {
@@ -167,12 +179,14 @@ export default function FormPage() {
     setEdits((prev) => ({ ...prev, ...newEdits }));
   };
 
-  const handleSave = useCallback(async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    setHeader?.({ saving: true });
-    if (!form) return;
+  // helper that actually hits the backend; returns saved form or null if
+  // nothing changed. does *not* touch header state.
+  const lastSavedPayload = useRef<string | null>(null);
+  const savingInFlightRef = useRef(false);
 
-    // 1. Merge all fields with edits + mark which ones have new images
+  const doSave = useCallback(async (): Promise<Form | null> => {
+    if (!form) return null;
+
     const updatedGeneral = buildUpdatedGeneralSection(
       form.generalSection,
       edits,
@@ -185,41 +199,61 @@ export default function FormPage() {
       localImages
     );
 
-    // 2. Build the JSON object (same as before)
     const payload = {
       ...form,
       generalSection: updatedGeneral,
       roofSides: updatedRoofSides || [],
     };
 
-    try {
-      const res = await fetch(
-        `/api/public/projects/${projectId}/forms/${formId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+    const str = JSON.stringify(payload);
+    if (lastSavedPayload.current === str) {
+      return null; // nothing to do
+    }
 
-      if (!res.ok) {
-        const body = await res.text();
-        throw new Error(`Server returned ${res.status}: ${body}`);
+    // clear any pending autosave timer since we're saving now
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
+
+    const res = await fetch(
+      `/api/public/projects/${projectId}/forms/${formId}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: str,
       }
+    );
 
-      const saved: Form = await res.json();
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Server returned ${res.status}: ${body}`);
+    }
 
-      setHeader?.({ saving: false });
+    const saved: Form = await res.json();
+    lastSavedPayload.current = str;
 
-      setForm(saved);
-      localStorage.removeItem(storageKey);
-      localStorage.removeItem(formStorageKey);
-      setLocalImages({});
+    // clear cache keys
+    localStorage.removeItem(storageKey);
+    localStorage.removeItem(formStorageKey);
+    setLocalImages({});
+
+    setForm(saved);
+    return saved;
+  }, [form, edits, localImages, projectId, formId, storageKey, formStorageKey]);
+
+  const handleSave = useCallback(async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setHeader?.({ saving: true });
+    try {
+      await doSave();
     } catch (err: any) {
       console.error("Save failed:", err);
       alert(err.message || "Failed to save form");
+    } finally {
+      setHeader?.({ saving: false });
     }
-  }, [form, projectId, formId, edits, localImages, storageKey]);
+  }, [doSave, setHeader]);
 
   const handlePdfGenerate = useCallback(async () => {
     await handleSave();
@@ -278,11 +312,46 @@ export default function FormPage() {
     };
   }, [setHeader, handleSave, handlePdfGenerate]);
 
+  // --- Autosave to server after inactivity ---
+  useEffect(() => {
+    if (!form || loading) return;
+    if (savingInFlightRef.current) return;
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+    autoSaveTimerRef.current = window.setTimeout(async () => {
+      savingInFlightRef.current = true;
+      try {
+        await doSave();
+      } catch (err) {
+        console.error("autosave failed", err);
+      } finally {
+        savingInFlightRef.current = false;
+      }
+    }, 180000);
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+    };
+  }, [edits, form, localImages, loading, doSave]);
+
+  // reset saved payload when the form object changes (refetch/delete/save)
+  useEffect(() => {
+    lastSavedPayload.current = null;
+  }, [form]);
+
   useEffect(() => {
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
+      }
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
       }
     };
   }, []);
@@ -327,8 +396,16 @@ export default function FormPage() {
             saveImage={saveImage}
             projectId={projectId as string}
             formId={formId as string}
-            onRoofSideDeleted={() => {
-              // Refetch the form after deletion
+            onRoofSideDeleted={(id) => {
+              // prune any cached copy immediately and then refetch
+              const stored = localStorage.getItem(formStorageKey);
+              if (stored) {
+                try {
+                  const parsed: Form = JSON.parse(stored);
+                  parsed.roofSides = parsed.roofSides?.filter((s) => s.id !== id);
+                  localStorage.setItem(formStorageKey, JSON.stringify(parsed));
+                } catch {}
+              }
               fetchForm();
             }}
           />
