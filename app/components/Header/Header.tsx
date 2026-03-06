@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
-import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
+import { Show } from "@clerk/nextjs";
 import { SignOutButton } from "@clerk/nextjs";
 import './header.css'
 import { useFormHeader } from '@/app/context/FormHeaderContext';
@@ -48,14 +49,14 @@ function Header() {
             )}
 
             <li>
-              <SignedOut>
+              <Show when="signed-out">
                 <a href="/sign-in">Logga in</a>
-              </SignedOut>
-              <SignedIn>
+              </Show>
+              <Show when="signed-in">
                 <SignOutButton>
                   <a>Logga ut</a>
                 </SignOutButton>
-              </SignedIn>              
+              </Show>              
             </li>
         </ul>
         </div>
@@ -95,14 +96,14 @@ function Header() {
 
             {role === 'admin' && <li><a href="/admin">Admin</a></li>}
             <li>
-              <SignedOut>
+              <Show when="signed-out">
                 <a href="/sign-in">Logga in</a>
-              </SignedOut>
-              <SignedIn>
+              </Show>
+              <Show when="signed-in">
                 <SignOutButton>
                   <a>Logga ut</a>
                 </SignOutButton>
-              </SignedIn>              
+              </Show>              
             </li>
         </ul>
         </div>
