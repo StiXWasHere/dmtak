@@ -1,16 +1,8 @@
 'use client';
 import { useState } from 'react';
-import {
-  ClerkProvider,
-  SignIn,
-  SignInButton,
-  SignOutButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-  useUser,
-} from '@clerk/nextjs'
+import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
+import { SignOutButton } from "@clerk/nextjs";
 import './header.css'
 import { useFormHeader } from '@/app/context/FormHeaderContext';
 import Spinner from '../LoadingSpinner/LoadingSpinner';
