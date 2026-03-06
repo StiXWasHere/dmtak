@@ -389,7 +389,6 @@ export default function FormPage() {
               id="customerParticipants"
               value={customerParticipants}
               onChange={(e) => setCustomerParticipants(e.target.value)}
-              placeholder="Ange kunddeltagare"
             />
           </label>
           <label htmlFor="workerParticipants" className="participants-section-label">
@@ -399,7 +398,6 @@ export default function FormPage() {
               id="workerParticipants"
               value={workerParticipants}
               onChange={(e) => setWorkerParticipants(e.target.value)}
-              placeholder="Ange arbetardeltagare"
             />
           </label>
         </div>

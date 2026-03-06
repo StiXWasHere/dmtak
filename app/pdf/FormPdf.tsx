@@ -147,10 +147,10 @@ export default function FormPdf({ form }: Props) {
           <View style={styles.introductionSection}>
             <Text style={styles.introductionText}>
               Detta dokument är ett internt kontrollprotokoll upprättat av DM TAK inom ramen för vår kvalitetssäkring. 
-              Syftet med kontrollen är att säkerställa att arbetet är rätt utfört och följer DM TAKS kvalitetsstandard.
+              Syftet med kontrollen är att säkerställa att arbetet är rätt utfört och följer DM TAKs kvalitetsstandard.
             </Text>
             <Text style={styles.introductionText}>
-              Vid noterade fel eller brister, ska dessa åtgärdas innan man fortsätter med annat arbete och bekräftas med bild och/eller video till kontrollant att de är åtgärdade.
+              Vid noterade fel eller brister, ska dessa åtgärdas innan man fortsätter med annat arbete, och bekräftas med bild och/eller video till kontrollant att de är åtgärdade.
             </Text>
             <Text style={styles.introductionText}>
               Kontrollen är en del av vår egen kvalitetssäkring och ska inte likställas med en oberoende slutbesiktning. 
