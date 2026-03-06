@@ -1,11 +1,6 @@
 import { type Metadata } from 'next'
 import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
+  ClerkProvider
 } from '@clerk/nextjs'
 import { Be_Vietnam_Pro } from 'next/font/google';
 import './styles/globals.css';
