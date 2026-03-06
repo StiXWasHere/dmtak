@@ -182,6 +182,9 @@ export default function FormPdf({ form }: Props) {
               </Text>
             )}
 
+            <Text style={styles.h2}>
+              {form.generalSectionTitle}
+            </Text>
             {form.generalSection
               .filter((field) => field.selected && field.selected !== "Ej aktuellt" && field.selected !== "Ej utförd")
               .map((field) => (
