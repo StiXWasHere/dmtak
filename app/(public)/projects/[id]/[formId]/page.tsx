@@ -20,6 +20,9 @@ export default function FormPage() {
   const [localImages, setLocalImages] = useState<{ [fieldId: string]: File | null }>({});
   const [loading, setLoading] = useState(true);
 
+  const [customerParticipants, setCustomerParticipants] = useState("");
+  const [workerParticipants, setWorkerParticipants] = useState("");
+
   const [generateError, setGenerateError] = useState<string | null>(null);
 
   const { setHeader } = useFormHeader();
@@ -86,6 +89,10 @@ export default function FormPage() {
         )
       );
       setEdits(initialEdits);
+
+      // Initialize participants
+      setCustomerParticipants(data.customerParticipants || "");
+      setWorkerParticipants(data.workerParticipants || "");
     } catch (err: any) {
       console.error(err);
       alert(err.message || "Failed to load form");
@@ -203,6 +210,8 @@ export default function FormPage() {
       ...form,
       generalSection: updatedGeneral,
       roofSides: updatedRoofSides || [],
+      customerParticipants: customerParticipants.trim() || undefined,
+      workerParticipants: workerParticipants.trim() || undefined,
     };
 
     const str = JSON.stringify(payload);
@@ -240,7 +249,7 @@ export default function FormPage() {
 
     setForm(saved);
     return saved;
-  }, [form, edits, localImages, projectId, formId, storageKey, formStorageKey]);
+  }, [form, edits, localImages, projectId, formId, storageKey, formStorageKey, customerParticipants, workerParticipants]);
 
   const handleSave = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -336,7 +345,7 @@ export default function FormPage() {
         autoSaveTimerRef.current = null;
       }
     };
-  }, [edits, form, localImages, loading, doSave]);
+  }, [edits, form, localImages, loading, doSave, customerParticipants, workerParticipants]);
 
   // reset saved payload when the form object changes (refetch/delete/save)
   useEffect(() => {
@@ -370,6 +379,30 @@ export default function FormPage() {
       <div className="form-page">
         <h1>{form.title}</h1>
         <p className="small-text">Skapad: {new Date(form.createdAt).toLocaleDateString("sv-SE")} av {form.ownerName || "okänd"}</p>
+
+        <div className="participants-section">
+          <h4>Deltagare vid besiktning</h4>
+          <label htmlFor="customerParticipants" className="participants-section-label">
+            Kund:
+            <input
+              type="text"
+              id="customerParticipants"
+              value={customerParticipants}
+              onChange={(e) => setCustomerParticipants(e.target.value)}
+              placeholder="Ange kunddeltagare"
+            />
+          </label>
+          <label htmlFor="workerParticipants" className="participants-section-label">
+            Underentrepenör:
+            <input 
+              type="text"
+              id="workerParticipants"
+              value={workerParticipants}
+              onChange={(e) => setWorkerParticipants(e.target.value)}
+              placeholder="Ange arbetardeltagare"
+            />
+          </label>
+        </div>
 
         <h2>{form.generalSectionTitle}</h2>
         {form.generalSection?.map((field) => (

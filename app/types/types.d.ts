@@ -24,6 +24,8 @@ type Form = {
     roofSides?: RoofSide[];
     ownerId?: string;
     ownerName?: string;
+    customerParticipants?: string;
+    workerParticipants?: string;
 }
 type FormSection = {
     id: string;

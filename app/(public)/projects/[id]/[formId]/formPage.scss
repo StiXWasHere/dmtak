@@ -110,6 +110,17 @@
     background-color: $lighten-red;
   }
 }
+.participants-section {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  width: 100%;
+
+  &-label {
+    display: flex;
+    flex-direction: column;
+  }
+}
 .add-roof-form {
     display: flex;
     flex-direction: column;

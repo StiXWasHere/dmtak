@@ -99,6 +99,17 @@
   background-color: rgba(220, 4, 43, 0.9);
 }
 
+.participants-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+.participants-section-label {
+  display: flex;
+  flex-direction: column;
+}
+
 .add-roof-form {
   display: flex;
   flex-direction: column;
