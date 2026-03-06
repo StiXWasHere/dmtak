@@ -18,10 +18,12 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { projectId, templateId, title } = body as {
+  const { projectId, templateId, title, customerParticipants, workerParticipants } = body as {
     projectId?: string;
     templateId?: string;
     title?: string;
+    customerParticipants?: string;
+    workerParticipants?: string;
   };
 
   if (!projectId || typeof projectId !== "string") {
@@ -66,7 +68,9 @@ export async function POST(req: NextRequest) {
       options: ['Godkänt', 'Ej godkänt', 'Ej aktuellt', 'Avhjälpt', 'Ej utförd'],
       comment: '',
       imgUrl: ''
-    }))
+    })),
+    customerParticipants: customerParticipants?.trim() || undefined,
+    workerParticipants: workerParticipants?.trim() || undefined,
   };
 
 

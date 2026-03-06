@@ -13,7 +13,8 @@ interface RoofSideSectionProps {
   saveImage: (fieldId: string, file: File) => void;
   projectId: string;
   formId: string;
-  onRoofSideDeleted: () => void;
+  // callback receives the id of the deleted side so the parent can prune storage
+  onRoofSideDeleted: (id: string) => void;
 }
 
 export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
@@ -69,7 +70,7 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
         throw new Error('Failed to delete roof side');
       }
 
-      onRoofSideDeleted();
+      onRoofSideDeleted(roofSide.id);
     } catch (error) {
       console.error('Error deleting roof side:', error);
       alert('Failed to delete roof side. Please try again.');

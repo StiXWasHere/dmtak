@@ -56,7 +56,8 @@ export default function AdminPage() {
     const res = await fetch("/api/admin/create-user", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, userRole, firstName, lastName }),
+      // server expects a `role` field, not `userRole`
+      body: JSON.stringify({ email, password, role: userRole, firstName, lastName }),
     });
 
     if (res.ok) {

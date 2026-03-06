@@ -21,4 +21,19 @@
   gap: 2rem;
 }
 
+.projects-filter {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-self: center;
+  gap: 1rem;
+}
+
+#OwnerFilter {
+  border: 1px solid rgb(15, 15, 15);
+  border-radius: 0.2rem;
+  padding: 0.3rem;
+  font-size: 1rem;
+}
+
 /*# sourceMappingURL=projectsPage.css.map */

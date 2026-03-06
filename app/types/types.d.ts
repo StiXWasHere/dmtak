@@ -24,6 +24,8 @@ type Form = {
     roofSides?: RoofSide[];
     ownerId?: string;
     ownerName?: string;
+    customerParticipants?: string;
+    workerParticipants?: string;
 }
 type FormSection = {
     id: string;
@@ -42,6 +44,10 @@ type RoofSide = {
     id: string;
     name: string;
     sections: FormSection[];
+    // flag used on the client only: sides created locally that haven't been
+    // committed to the backend yet. This allows us to merge without bringing
+    // back deleted sides from the server.
+    _isLocal?: boolean;
 }
 type FormTemplate = {
     id: string;
