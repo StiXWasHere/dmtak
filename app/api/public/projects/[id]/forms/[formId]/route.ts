@@ -3,6 +3,32 @@ import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getAuth, clerkClient } from "@clerk/nextjs/server";
 
+function removeUndefinedDeep(value: unknown): unknown {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+
+  if (Array.isArray(value)) {
+    return value.map((item) => {
+      const normalized = removeUndefinedDeep(item);
+      return normalized === undefined ? null : normalized;
+    });
+  }
+
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    const cleaned = Object.entries(obj).reduce<Record<string, unknown>>((acc, [key, val]) => {
+      const normalized = removeUndefinedDeep(val);
+      if (normalized !== undefined) {
+        acc[key] = normalized;
+      }
+      return acc;
+    }, {});
+    return cleaned;
+  }
+
+  return value;
+}
+
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string; formId: string }> }
@@ -34,10 +60,24 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const data: Form = await req.json();
+  const data = (await req.json()) as Partial<Form>;
+  const sanitizedData = removeUndefinedDeep(data);
+
+  if (!sanitizedData || typeof sanitizedData !== "object" || Array.isArray(sanitizedData)) {
+    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+  }
+
+  if (Object.keys(sanitizedData).length === 0) {
+    return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+  }
 
   const ref = doc(db, "projects", id, "forms", formId);
-  await setDoc(ref, data, { merge: true });
+  const existing = await getDoc(ref);
+  if (!existing.exists()) {
+    return NextResponse.json({ error: "Form not found" }, { status: 404 });
+  }
+
+  await setDoc(ref, sanitizedData, { merge: true });
 
   const snap = await getDoc(ref);
   if (!snap.exists()) {
