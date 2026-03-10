@@ -53,6 +53,9 @@ export async function POST(req: NextRequest) {
     collection(db, "projects", projectId, "forms")
   );
 
+  const trimmedCustomerParticipants = customerParticipants?.trim();
+  const trimmedWorkerParticipants = workerParticipants?.trim();
+
   const newForm: Form = {
     id: newFormRef.id,
     title: title.trim(),
@@ -69,8 +72,12 @@ export async function POST(req: NextRequest) {
       comment: '',
       imgUrl: ''
     })),
-    customerParticipants: customerParticipants?.trim() || undefined,
-    workerParticipants: workerParticipants?.trim() || undefined,
+    ...(trimmedCustomerParticipants
+      ? { customerParticipants: trimmedCustomerParticipants }
+      : {}),
+    ...(trimmedWorkerParticipants
+      ? { workerParticipants: trimmedWorkerParticipants }
+      : {}),
   };
 
 
