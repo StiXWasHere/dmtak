@@ -108,8 +108,39 @@ export default function AdminPage() {
   return (
     <div className="admin">
       <h1 className="page-title-1">Admin Panel</h1>
+      <h3 className="page-title-3">Användare</h3>
+      <p className="status-text" style={{marginBottom: '1rem'}}>{status}</p>
+      <div className="users-list">
+          {users.length === 0 ? (
+          <p>No users found.</p>
+          ) : (
+            
+            users.map((u) => (
+                <div key={u.id} className="users-list-item">
+                  <p>
+                      <strong>{u.emailAddresses[0]?.emailAddress}</strong>
+                  </p>
+                  <p>{u.firstName} {u.lastName}</p>
+                  <div className="users-list-item-role">
+                    <label htmlFor={`role-${u.id}`}>Välj roll: </label>
+                      <select
+                        className="user-role-select"
+                        id={`role-${u.id}`}
+                        value={u.publicMetadata.role as string || "none"}
+                        onChange={(e) => updateRole(u.id, e.target.value)}
+                      >
+                        <option value="admin">Admin</option>
+                        <option value="project">Arbetsledare</option>
+                      </select>
+                  </div>
 
-      <form className="create-user-form" onSubmit={createUser}>
+                  <button id="SubmitFormBtn" onClick={() => deleteUser(u.id)}>Radera användare</button>
+                </div>
+            ))
+          )}        
+      </div>
+
+            <form className="create-user-form" onSubmit={createUser}>
         <h2 className="page-title-2">Skapa ny användare</h2>
         <input type="text"
           placeholder="Förnamn"
@@ -152,37 +183,6 @@ export default function AdminPage() {
         <button id="SubmitFormBtn" type="submit">Skapa användare</button>
       </form>
 
-      <p className="status-text">{status}</p>
-      <h3 className="page-title-3">Användare</h3>
-      <div className="users-list">
-          {users.length === 0 ? (
-          <p>No users found.</p>
-          ) : (
-            
-            users.map((u) => (
-                <div key={u.id} className="users-list-item">
-                  <p>
-                      <strong>{u.emailAddresses[0]?.emailAddress}</strong>
-                  </p>
-                  <p>{u.firstName} {u.lastName}</p>
-                  <div className="users-list-item-role">
-                    <label htmlFor={`role-${u.id}`}>Välj roll: </label>
-                      <select
-                        className="user-role-select"
-                        id={`role-${u.id}`}
-                        value={u.publicMetadata.role as string || "none"}
-                        onChange={(e) => updateRole(u.id, e.target.value)}
-                      >
-                        <option value="admin">Admin</option>
-                        <option value="project">Arbetsledare</option>
-                      </select>
-                  </div>
-
-                  <button id="SubmitFormBtn" onClick={() => deleteUser(u.id)}>Radera användare</button>
-                </div>
-            ))
-          )}        
-      </div>
           <div className="admin-forms-redirect">          
             <Link href="/admin/form" id="NavNextLinkThin">
               Skapa ny formulärmall

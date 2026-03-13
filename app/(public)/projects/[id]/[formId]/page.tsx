@@ -14,10 +14,12 @@ import "./formPage.css";
 import Spinner from "@/app/components/LoadingSpinner/LoadingSpinner";
 import { useFormHeader } from "@/app/context/FormHeaderContext";
 import WarningModal from "@/app/components/WarningModal/WarningModal";
+import { useUser } from "@clerk/nextjs";
 
 export default function FormPage() {
   const { id: projectId, formId } = useParams();
   const router = useRouter();
+  const { user } = useUser();
   const [form, setForm] = useState<Form | null>(null);
   const [edits, setEdits] = useState<FormEdits>({});
   const [localImages, setLocalImages] = useState<{ [fieldId: string]: File | null }>({});
@@ -40,6 +42,9 @@ export default function FormPage() {
   // the page re‑loaded.  we'll sync this key whenever `form` changes and
   // restore it when we fetch from the server.
   const formStorageKey = `form-data-${projectId}-${formId}`;
+
+  const role = user?.publicMetadata?.role;
+  const canDeleteForm = Boolean(user?.id) && (role === "admin" || form?.ownerId === user?.id);
 
   const fetchForm = useCallback(async () => {
     setLoading(true);
@@ -390,7 +395,7 @@ export default function FormPage() {
   }, [projectId, formId]);
 
   const handleDeleteForm = useCallback(async () => {
-    if (!projectId || !formId) return;
+    if (!projectId || !formId || !canDeleteForm) return;
 
     setDeletingForm(true);
 
@@ -417,7 +422,7 @@ export default function FormPage() {
       alert(err.message || "Failed to delete form");
       setDeletingForm(false);
     }
-  }, [projectId, formId, storageKey, formStorageKey, router]);
+  }, [projectId, formId, storageKey, formStorageKey, router, canDeleteForm]);
 
   //Use effect to set header buttons
   useEffect(() => {
@@ -496,14 +501,16 @@ export default function FormPage() {
       <div className="form-page">
         <div className="form-page-header">
           <h1>{form.title}</h1>
-          <button
-            type="button"
-            className="form-page-delete-btn"
-            onClick={() => setShowDeleteModal(true)}
-            disabled={deletingForm}
-          >
-            {deletingForm ? "Raderar formulär..." : "Radera formulär"}
-          </button>
+          {canDeleteForm && (
+            <button
+              type="button"
+              className="form-page-delete-btn"
+              onClick={() => setShowDeleteModal(true)}
+              disabled={deletingForm}
+            >
+              {deletingForm ? "Raderar formulär..." : "Radera formulär"}
+            </button>
+          )}
         </div>
         <p className="small-text">Skapad: {new Date(form.createdAt).toLocaleDateString("sv-SE")} av {form.ownerName || "okänd"}</p>
 
@@ -588,15 +595,17 @@ export default function FormPage() {
           </button>
         </form>
 
-        <WarningModal
-          open={showDeleteModal}
-          onClose={() => setShowDeleteModal(false)}
-          onConfirm={handleDeleteForm}
-          title="Radera formulär"
-          message={`Är du säker på att du vill radera formuläret "${form.title}"? Denna åtgärd kan inte ångras.`}
-          confirmText="Radera"
-          cancelText="Avbryt"
-        />
+        {canDeleteForm && (
+          <WarningModal
+            open={showDeleteModal}
+            onClose={() => setShowDeleteModal(false)}
+            onConfirm={handleDeleteForm}
+            title="Radera formulär"
+            message={`Är du säker på att du vill radera formuläret "${form.title}"? Denna åtgärd kan inte ångras.`}
+            confirmText="Radera"
+            cancelText="Avbryt"
+          />
+        )}
       </div>
   );
 }

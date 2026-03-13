@@ -7,10 +7,12 @@ import CreateFormModal from "@/app/components/FormModal/FormModal";
 import Link from "next/link";
 import Spinner from "@/app/components/LoadingSpinner/LoadingSpinner";
 import WarningModal from "@/app/components/WarningModal/WarningModal";
+import { useUser } from "@clerk/nextjs";
 
 export default function ProjectPage() {
   const pathname = usePathname(); // e.g., "/projects/abc123"
   const router = useRouter();
+  const { user } = useUser();
   const projectId = pathname.split("/").pop(); // get the last part
 
   const [project, setProject] = useState<Project | null>(null);
@@ -80,7 +82,7 @@ export default function ProjectPage() {
   }
 
   async function deleteProject() {
-    if (!projectId) return;
+    if (!projectId || !canDeleteProject) return;
 
     setDeletingProject(true);
 
@@ -110,18 +112,23 @@ export default function ProjectPage() {
   if (error) return <p>{error}</p>;
   if (!project) return <p>Inget projekt hittat.</p>;
 
+  const role = user?.publicMetadata?.role;
+  const canDeleteProject = Boolean(user?.id) && (role === "admin" || project.ownerId === user?.id);
+
   return (
     <div className="project-detail-page">
       <div className="project-detail-page-header">
         <h1 className="page-title-1">{project.title}</h1>
-        <button
-          type="button"
-          className="project-detail-page-delete-btn"
-          onClick={() => setShowDeleteModal(true)}
-          disabled={deletingProject}
-        >
-          {deletingProject ? "Raderar projekt..." : "Radera projekt"}
-        </button>
+        {canDeleteProject && (
+          <button
+            type="button"
+            className="project-detail-page-delete-btn"
+            onClick={() => setShowDeleteModal(true)}
+            disabled={deletingProject}
+          >
+            {deletingProject ? "Raderar projekt..." : "Radera projekt"}
+          </button>
+        )}
       </div>
       
 
@@ -157,15 +164,17 @@ export default function ProjectPage() {
       </div>
       <p className="small-text">Skapad: {new Date(project.createdAt).toLocaleDateString("sv-SE")} av {project.ownerName || "okänd"}</p>
 
-      <WarningModal
-        open={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={deleteProject}
-        title="Radera projekt"
-        message={`Är du säker på att du vill radera projektet "${project.title}"? Alla formulär i projektet raderas också och åtgärden kan inte ångras.`}
-        confirmText="Radera"
-        cancelText="Avbryt"
-      />
+      {canDeleteProject && (
+        <WarningModal
+          open={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={deleteProject}
+          title="Radera projekt"
+          message={`Är du säker på att du vill radera projektet "${project.title}"? Alla formulär i projektet raderas också och åtgärden kan inte ångras.`}
+          confirmText="Radera"
+          cancelText="Avbryt"
+        />
+      )}
     </div>
   );
 }
