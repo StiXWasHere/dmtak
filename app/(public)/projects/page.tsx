@@ -1,5 +1,5 @@
 'use client'
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import './projectsPage.css'
 import CreateProjectModal from "@/app/components/ProjectModal/ProjectModal";
 import Spinner from "@/app/components/LoadingSpinner/LoadingSpinner";
@@ -8,7 +8,7 @@ import Link from "next/link";
 function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
-  const [title, setTitle] = useState("");
+  const [searchTitle, setSearchTitle] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -31,11 +31,18 @@ function ProjectsPage() {
   };
 
   // Filter and sort projects based on selected owner
-  const applyFilters = (projectsList: Project[], owner: string) => {
+  const applyFilters = (projectsList: Project[], owner: string, titleSearch: string) => {
     let result = projectsList;
+    const normalizedTitleSearch = titleSearch.trim().toLowerCase();
 
     if (owner !== "all") {
       result = result.filter((p) => p.ownerId === owner);
+    }
+
+    if (normalizedTitleSearch) {
+      result = result.filter((p) =>
+        p.title.toLowerCase().includes(normalizedTitleSearch),
+      );
     }
 
     return sortProjectsByDate(result);
@@ -69,7 +76,6 @@ function ProjectsPage() {
       return;
     }
 
-    setTitle("");
     setStatus("Project created!");
     loadProjects(projects);
   }
@@ -79,9 +85,9 @@ function ProjectsPage() {
   }, []);
 
   useEffect(() => {
-    const filtered = applyFilters(projects, selectedOwner);
+    const filtered = applyFilters(projects, selectedOwner, searchTitle);
     setFilteredProjects(filtered);
-  }, [selectedOwner, projects]);
+  }, [selectedOwner, searchTitle, projects]);
 
   return (
     <div className='projects'>
@@ -89,21 +95,35 @@ function ProjectsPage() {
             <h1 className="page-title-1">Projekt</h1>
             {!loading && projects.length > 0 && (
               <div className="projects-filter">
-                <label htmlFor="ownerFilter" style={{ marginRight: "0.5rem" }}>
-                  Filtrera efter ägare:
-                </label>
-                <select
-                  id="OwnerFilter"
-                  value={selectedOwner}
-                  onChange={(e) => setSelectedOwner(e.target.value)}
-                >
-                  <option value="all">Alla</option>
-                  {getUniqueOwners(projects).map((owner) => (
-                    <option key={owner.id} value={owner.id}>
-                      {owner.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="projects-filter-section">
+                  <label htmlFor="titleFilter">
+                    Sök titel:
+                  </label>
+                    <input
+                      id="titleFilter"
+                      type="text"
+                      value={searchTitle}
+                      onChange={(e) => setSearchTitle(e.target.value)}
+                      placeholder="Skriv projektnamn"
+                    />                  
+                </div>                
+                <div className="projects-filter-section">
+                  <label htmlFor="ownerFilter">
+                    Filtrera efter ägare:
+                  </label>
+                  <select
+                    id="ownerFilter"
+                    value={selectedOwner}
+                    onChange={(e) => setSelectedOwner(e.target.value)}
+                  >
+                    <option value="all">Alla</option>
+                    {getUniqueOwners(projects).map((owner) => (
+                      <option key={owner.id} value={owner.id}>
+                        {owner.name}
+                      </option>
+                    ))}
+                  </select>                
+                </div>
               </div>
             )}
           {loading ? (

@@ -28,6 +28,11 @@
   align-self: center;
   gap: 1rem;
 }
+.projects-filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
 
 #OwnerFilter {
   border: 1px solid rgb(15, 15, 15);
