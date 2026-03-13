@@ -8,6 +8,29 @@
   list-style: none;
   margin-top: 9rem;
 }
+.form-page-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.form-page-delete-btn {
+  padding-inline: 1rem;
+  padding-block: 0.3rem;
+  border: none;
+  border-radius: 0.2rem;
+  color: rgb(254, 254, 254);
+  background-color: rgb(150, 150, 150);
+  font-size: 24px;
+  cursor: pointer;
+}
+.form-page-delete-btn:hover:not(:disabled) {
+  background-color: rgb(95, 95, 95);
+}
+.form-page-delete-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
 .form-page .form-page-ul {
   display: flex;
   flex-direction: column;
@@ -160,6 +183,20 @@
 }
 .delete-roof-side-btn:hover {
   background-color: rgb(250, 250, 250);
+}
+
+.add-custom-field-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.field-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 /*# sourceMappingURL=formPage.css.map */
