@@ -22,7 +22,6 @@
   color: rgb(254, 254, 254);
   background-color: rgb(150, 150, 150);
   font-size: 24px;
-  font-weight: bold;
   cursor: pointer;
 }
 .project-detail-page-delete-btn:hover:not(:disabled) {
