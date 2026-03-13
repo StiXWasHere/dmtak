@@ -10,9 +10,10 @@ interface FieldItemProps {
   saveComment: (fieldId: string, comment: string) => void;
   saveImage: (fieldId: string, file: File) => void;
   className?: string;
+  onDelete?: () => void;
 }
 
-export const FieldItem = React.memo(({ field, edits, localImages, saveOption, saveComment, saveImage, className }: FieldItemProps) => {
+export const FieldItem = React.memo(({ field, edits, localImages, saveOption, saveComment, saveImage, className, onDelete }: FieldItemProps) => {
   const selected = edits[field.fieldId]?.selected || "";
   const imgUrl = edits[field.fieldId]?.imgUrl;
 
@@ -35,7 +36,14 @@ export const FieldItem = React.memo(({ field, edits, localImages, saveOption, sa
 
   return (
     <div className={className || "form-page-ul-li"}>
-      <p>{field.title}</p>
+      <div className="field-item-header">
+        <p>{field.title}</p>
+        {onDelete && (
+          <button type="button" id="SubmitFormBtn" onClick={onDelete}>
+            Radera fält
+          </button>
+        )}
+      </div>
 
       {field.options && (
         <div className="form-page-ul-li-input">

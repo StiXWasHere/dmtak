@@ -39,6 +39,7 @@ type FormField = {
     selected?: string;
     comment?: string;
     imgUrl?: string;
+    _isCustom?: boolean;
 }
 type RoofSide = {
     id: string;

@@ -15,6 +15,8 @@ interface RoofSideSectionProps {
   formId: string;
   // callback receives the id of the deleted side so the parent can prune storage
   onRoofSideDeleted: (id: string) => void;
+  onAddCustomField: (roofSideId: string, sectionId: string, title: string) => void;
+  onRemoveCustomField: (roofSideId: string, sectionId: string, fieldId: string) => void;
 }
 
 export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
@@ -27,11 +29,14 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
   projectId,
   formId,
   onRoofSideDeleted,
+  onAddCustomField,
+  onRemoveCustomField,
 }) => {
   const [hidden, setHidden] = useState(false);
   const [openSectionId, setOpenSectionId] = useState(null as string | null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [customFieldDrafts, setCustomFieldDrafts] = useState<{ [sectionId: string]: string }>({});
 
   // Create refs for each section
   const sectionRefs = useRef<{ [id: string]: HTMLDivElement | null }>({});
@@ -128,8 +133,35 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
                       saveComment={saveComment}
                       saveImage={saveImage}
                       className="form-page-ul-li"
+                      onDelete={field._isCustom ? () => onRemoveCustomField(roofSide.id, section.id, field.fieldId) : undefined}
                     />
                   ))}
+
+                  <form
+                    className="add-custom-field-form"
+                    style={{ marginBlock: '2rem' }}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const title = (customFieldDrafts[section.id] || "").trim();
+                      if (!title) return;
+                      onAddCustomField(roofSide.id, section.id, title);
+                      setCustomFieldDrafts((prev) => ({ ...prev, [section.id]: "" }));
+                    }}
+                  >
+                    <label htmlFor={`custom-field-${roofSide.id}-${section.id}`}>Lägg till eget fält</label>
+                    <input
+                      id={`custom-field-${roofSide.id}-${section.id}`}
+                      type="text"
+                      style={{ width: "100%"}}
+                      value={customFieldDrafts[section.id] || ""}
+                      placeholder="Fältets titel"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCustomFieldDrafts((prev) => ({ ...prev, [section.id]: value }));
+                      }}
+                    />
+                    <button type="submit" id="SubmitFormBtn">Lägg till fält</button>
+                  </form>
                 </div>
               )}
             </div>

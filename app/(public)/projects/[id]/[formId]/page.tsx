@@ -6,6 +6,7 @@ import { FieldItem } from "@/app/components/FieldItem/FieldItem";
 import { RoofSideSection } from "@/app/components/RoofSideSection/RoofSideSection";
 import {
   createRoofSide,
+  createCustomField,
   buildUpdatedGeneralSection,
   buildUpdatedRoofSides,
 } from "@/app/helpers/formHelpers";
@@ -51,12 +52,23 @@ export default function FormPage() {
           const parsed: Form = JSON.parse(savedForm);
           if (parsed.roofSides) {
             const serverSides = data.roofSides || [];
+            const localSides = parsed.roofSides || [];
+            const localById = new Map(localSides.map((s) => [s.id, s]));
+
+            // prefer locally saved structure for existing side IDs so unsaved
+            // field add/remove changes survive reloads
+            const mergedExisting = serverSides.map((serverSide) => {
+              const localSide = localById.get(serverSide.id);
+              return localSide ? localSide : serverSide;
+            });
+
             const existingIds = new Set(serverSides.map((s) => s.id));
             // only carry over sides that were created locally (_isLocal flag)
-            const newLocals = parsed.roofSides.filter(
+            const newLocals = localSides.filter(
               (s: RoofSide) => (s as any)._isLocal && !existingIds.has(s.id)
             );
-            data = { ...data, roofSides: [...serverSides, ...newLocals] };
+
+            data = { ...data, roofSides: [...mergedExisting, ...newLocals] };
           }
         } catch (err) {
           console.warn("could not parse saved form from storage", err);
@@ -185,6 +197,77 @@ export default function FormPage() {
     );
     setEdits((prev) => ({ ...prev, ...newEdits }));
   };
+
+  const handleAddCustomField = useCallback((roofSideId: string, sectionId: string, title: string) => {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) return;
+
+    const newField = createCustomField(trimmedTitle);
+
+    setForm((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        roofSides: (prev.roofSides || []).map((side) => {
+          if (side.id !== roofSideId) return side;
+
+          return {
+            ...side,
+            sections: side.sections.map((section) => {
+              if (section.id !== sectionId) return section;
+              return {
+                ...section,
+                fields: [...section.fields, newField],
+              };
+            }),
+          };
+        }),
+      };
+    });
+
+    setEdits((prev) => ({
+      ...prev,
+      [newField.fieldId]: { selected: "", comment: "", imgUrl: "" },
+    }));
+  }, []);
+
+  const handleRemoveCustomField = useCallback((roofSideId: string, sectionId: string, fieldId: string) => {
+    setForm((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        roofSides: (prev.roofSides || []).map((side) => {
+          if (side.id !== roofSideId) return side;
+
+          return {
+            ...side,
+            sections: side.sections.map((section) => {
+              if (section.id !== sectionId) return section;
+              return {
+                ...section,
+                fields: section.fields.filter((field) => field.fieldId !== fieldId),
+              };
+            }),
+          };
+        }),
+      };
+    });
+
+    setEdits((prev) => {
+      const next = { ...prev };
+      delete next[fieldId];
+      return next;
+    });
+
+    setLocalImages((prev) => {
+      if (!(fieldId in prev)) return prev;
+      const next = { ...prev };
+      delete next[fieldId];
+      return next;
+    });
+  }, []);
 
   // helper that actually hits the backend; returns saved form or null if
   // nothing changed. does *not* touch header state.
@@ -427,6 +510,8 @@ export default function FormPage() {
             saveImage={saveImage}
             projectId={projectId as string}
             formId={formId as string}
+            onAddCustomField={handleAddCustomField}
+            onRemoveCustomField={handleRemoveCustomField}
             onRoofSideDeleted={(id) => {
               // prune any cached copy immediately and then refetch
               const stored = localStorage.getItem(formStorageKey);

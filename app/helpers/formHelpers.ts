@@ -29,6 +29,16 @@ export const createRoofSide = (name?: string, existingCount?: number): RoofSide 
   })),
 });
 
+export const createCustomField = (title: string): FormField => ({
+  title,
+  fieldId: uuid(),
+  options: [...defaultFieldOptions],
+  selected: "",
+  comment: "",
+  imgUrl: "",
+  _isCustom: true,
+});
+
 // Merge a field with current edits and local image reference
 export function mergeFieldForSave(
   field: FormField,
