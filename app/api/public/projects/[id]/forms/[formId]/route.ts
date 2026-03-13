@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getAuth, clerkClient } from "@clerk/nextjs/server";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
+});
 
 function removeUndefinedDeep(value: unknown): unknown {
   if (value === undefined) return undefined;
@@ -27,6 +34,40 @@ function removeUndefinedDeep(value: unknown): unknown {
   }
 
   return value;
+}
+
+function extractPublicId(url: string) {
+  try {
+    const match = url.match(/\/upload(?:\/[^\/]*)*\/v\d+\/(.+?)\.(?:jpg|jpeg|png|webp|gif|svg|bmp|tiff)(?:$|\?)/i);
+    if (match?.[1]) return match[1];
+
+    const fallbackMatch = url.match(/forms\/(.+?)\.(?:jpg|jpeg|png|webp|gif|svg|bmp|tiff)/i);
+    return fallbackMatch ? `forms/${fallbackMatch[1]}` : null;
+  } catch {
+    return null;
+  }
+}
+
+function collectFormImageUrls(form: Form) {
+  const imageUrls: string[] = [];
+
+  if (Array.isArray(form.generalSection)) {
+    form.generalSection.forEach((field) => {
+      if (field.imgUrl) imageUrls.push(field.imgUrl);
+    });
+  }
+
+  if (Array.isArray(form.roofSides)) {
+    form.roofSides.forEach((side) => {
+      side.sections?.forEach((section) => {
+        section.fields?.forEach((field) => {
+          if (field.imgUrl) imageUrls.push(field.imgUrl);
+        });
+      });
+    });
+  }
+
+  return imageUrls;
 }
 
 export async function GET(
@@ -125,6 +166,26 @@ export async function DELETE(
     if (role !== "admin" && form.ownerId !== userId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+
+    const imageUrls = collectFormImageUrls(form as Form);
+    const deleteImagePromises: Promise<void>[] = [];
+
+    for (const url of imageUrls) {
+      const publicId = extractPublicId(url);
+      if (!publicId) continue;
+
+      deleteImagePromises.push(
+        (async () => {
+          try {
+            await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+          } catch (cloudinaryError) {
+            console.error("Cloudinary delete failed for", publicId, cloudinaryError);
+          }
+        })()
+      );
+    }
+
+    await Promise.all(deleteImagePromises);
 
     await deleteDoc(formRef);
 

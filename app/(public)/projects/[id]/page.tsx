@@ -1,14 +1,16 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import './projectDetailPage.css';
 import CreateFormModal from "@/app/components/FormModal/FormModal";
 import Link from "next/link";
 import Spinner from "@/app/components/LoadingSpinner/LoadingSpinner";
+import WarningModal from "@/app/components/WarningModal/WarningModal";
 
 export default function ProjectPage() {
   const pathname = usePathname(); // e.g., "/projects/abc123"
+  const router = useRouter();
   const projectId = pathname.split("/").pop(); // get the last part
 
   const [project, setProject] = useState<Project | null>(null);
@@ -17,6 +19,8 @@ export default function ProjectPage() {
   const [loadingForms, setLoadingForms] = useState(true);
   const [error, setError] = useState("");
   const [showFormModal, setShowFormModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingProject, setDeletingProject] = useState(false);
 
   // fetch project
   useEffect(() => {
@@ -75,6 +79,29 @@ export default function ProjectPage() {
     }
   }
 
+  async function deleteProject() {
+    if (!projectId) return;
+
+    setDeletingProject(true);
+
+    try {
+      const res = await fetch(`/api/public/projects/${projectId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`Server returned ${res.status}: ${body}`);
+      }
+
+      router.push("/projects");
+    } catch (err: any) {
+      console.error("Failed to delete project:", err);
+      alert(err.message || "Failed to delete project");
+      setDeletingProject(false);
+    }
+  }
+
   if (loadingProject) return (
     <div className="loading-page">
       <Spinner size={48} />
@@ -85,7 +112,17 @@ export default function ProjectPage() {
 
   return (
     <div className="project-detail-page">
-      <h1 className="page-title-1">{project.title}</h1>
+      <div className="project-detail-page-header">
+        <h1 className="page-title-1">{project.title}</h1>
+        <button
+          type="button"
+          className="project-detail-page-delete-btn"
+          onClick={() => setShowDeleteModal(true)}
+          disabled={deletingProject}
+        >
+          {deletingProject ? "Raderar projekt..." : "Radera projekt"}
+        </button>
+      </div>
       
 
       {loadingForms ? (
@@ -119,6 +156,16 @@ export default function ProjectPage() {
         />
       </div>
       <p className="small-text">Skapad: {new Date(project.createdAt).toLocaleDateString("sv-SE")} av {project.ownerName || "okänd"}</p>
+
+      <WarningModal
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={deleteProject}
+        title="Radera projekt"
+        message={`Är du säker på att du vill radera projektet "${project.title}"? Alla formulär i projektet raderas också och åtgärden kan inte ångras.`}
+        confirmText="Radera"
+        cancelText="Avbryt"
+      />
     </div>
   );
 }
