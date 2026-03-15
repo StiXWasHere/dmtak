@@ -5,17 +5,22 @@ import React, { useState, useEffect, useCallback } from "react";
 interface FieldItemProps {
   field: FormField;
   edits: FormEdits;
-  localImages: { [fieldId: string]: File | null };
+  localImages: { [fieldId: string]: File[] };
   saveOption: (fieldId: string, option: string) => void;
   saveComment: (fieldId: string, comment: string) => void;
-  saveImage: (fieldId: string, file: File) => void;
+  saveImage: (fieldId: string, files: File[]) => Promise<void>;
+  deleteImage: (fieldId: string, imageUrl: string) => Promise<void>;
   className?: string;
   onDelete?: () => void;
 }
 
-export const FieldItem = React.memo(({ field, edits, localImages, saveOption, saveComment, saveImage, className, onDelete }: FieldItemProps) => {
+export const FieldItem = React.memo(({ field, edits, localImages, saveOption, saveComment, saveImage, deleteImage, className, onDelete }: FieldItemProps) => {
   const selected = edits[field.fieldId]?.selected || "";
-  const imgUrl = edits[field.fieldId]?.imgUrl;
+  const imageUrls = edits[field.fieldId]?.imgUrls?.length
+    ? edits[field.fieldId]?.imgUrls || []
+    : edits[field.fieldId]?.imgUrl
+    ? [edits[field.fieldId]?.imgUrl as string]
+    : [];
 
   // Local state to buffer comment input
   const [localComment, setLocalComment] = useState(edits[field.fieldId]?.comment || "");
@@ -26,13 +31,18 @@ export const FieldItem = React.memo(({ field, edits, localImages, saveOption, sa
   }, [edits, field.fieldId]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) saveImage(field.fieldId, file);
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (files.length > 0) {
+      void saveImage(field.fieldId, files);
+    }
+    e.target.value = "";
   };
 
   const handleCommentBlur = () => {
     saveComment(field.fieldId, localComment);
   };
+
+  const localImageCount = localImages[field.fieldId]?.length || 0;
 
   return (
     <div className={className || "form-page-ul-li"}>
@@ -76,6 +86,7 @@ export const FieldItem = React.memo(({ field, edits, localImages, saveOption, sa
         <input
           type="file"
           accept="image/*"
+          multiple
           id={`file-${field.fieldId}`}
           style={{ display: "none" }}
           onChange={handleFileChange}
@@ -91,12 +102,21 @@ export const FieldItem = React.memo(({ field, edits, localImages, saveOption, sa
         >
           +
         </button>
-
-        {localImages[field.fieldId] ? (
-          <img src={URL.createObjectURL(localImages[field.fieldId]!)} width={150} />
-        ) : imgUrl ? (
-          <img src={imgUrl} width={150} />
-        ) : null}
+        {imageUrls.map((url, index) => (
+          <div className="field-image-wrapper" key={`${field.fieldId}-${index}-${url}`}>
+            <button
+              type="button"
+              className="delete-image-btn"
+              onClick={() => void deleteImage(field.fieldId, url)}
+            >
+              radera
+            </button>
+            <img src={url} width={150} />
+          </div>
+        ))}
+        {localImageCount > 0 && (
+          <p className="image-uploading-text">Laddar upp {localImageCount} bild(er)...</p>
+        )}
       </div>
     </div>
   );

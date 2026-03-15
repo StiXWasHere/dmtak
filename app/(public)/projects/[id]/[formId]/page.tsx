@@ -22,7 +22,7 @@ export default function FormPage() {
   const { user } = useUser();
   const [form, setForm] = useState<Form | null>(null);
   const [edits, setEdits] = useState<FormEdits>({});
-  const [localImages, setLocalImages] = useState<{ [fieldId: string]: File | null }>({});
+  const [localImages, setLocalImages] = useState<{ [fieldId: string]: File[] }>({});
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingForm, setDeletingForm] = useState(false);
@@ -91,20 +91,32 @@ export default function FormPage() {
       // Initialize edits from DB + localStorage
       // localStorage takes priority so recent unsaved changes aren't overwritten
       const initialEdits: FormEdits = {};
+      const getImageUrls = (savedField: any, field: FormField) => {
+        if (Array.isArray(savedField?.imgUrls)) return savedField.imgUrls;
+        if (savedField?.imgUrl) return [savedField.imgUrl];
+        if (Array.isArray(field.imgUrls)) return field.imgUrls;
+        if (field.imgUrl) return [field.imgUrl];
+        return [];
+      };
+
       data.generalSection.forEach((f) => {
+        const imageUrls = getImageUrls(saved[f.fieldId], f);
         initialEdits[f.fieldId] = {
           selected: saved[f.fieldId]?.selected || f.selected || "",
           comment: saved[f.fieldId]?.comment || f.comment || "",
-          imgUrl: saved[f.fieldId]?.imgUrl || f.imgUrl || "",
+          imgUrls: imageUrls,
+          imgUrl: imageUrls[0] || "",
         };
       });
       data.roofSides?.forEach((side) =>
         side.sections.forEach((section) =>
           section.fields.forEach((f) => {
+            const imageUrls = getImageUrls(saved[f.fieldId], f);
             initialEdits[f.fieldId] = {
               selected: saved[f.fieldId]?.selected || f.selected || "",
               comment: saved[f.fieldId]?.comment || f.comment || "",
-              imgUrl: saved[f.fieldId]?.imgUrl || f.imgUrl || "",
+              imgUrls: imageUrls,
+              imgUrl: imageUrls[0] || "",
             };
           })
         )
@@ -163,32 +175,91 @@ export default function FormPage() {
   }, []);
 
 
-  const saveImage = useCallback(async (fieldId: string, file: File) => {
-    // local preview still works
-    setLocalImages((prev) => ({ ...prev, [fieldId]: file }));
+  const saveImage = useCallback(async (fieldId: string, files: File[]) => {
+    if (!files.length) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
+    setLocalImages((prev) => ({
+      ...prev,
+      [fieldId]: [...(prev[fieldId] || []), ...files],
+    }));
 
-    const res = await fetch("/api/public/upload/image", {
-      method: "POST",
-      body: formData,
-    });
+    const uploadedUrls: string[] = [];
 
-    if (!res.ok) {
-      console.error("Image upload failed");
-      return;
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/public/upload/image", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        console.error("Image upload failed");
+        continue;
+      }
+
+      const { url } = await res.json();
+      if (url) uploadedUrls.push(url);
     }
 
-    const { url } = await res.json();
+    if (uploadedUrls.length > 0) {
+      setEdits((prev) => {
+        const prevField = prev[fieldId] || {};
+        const existing = prevField.imgUrls || (prevField.imgUrl ? [prevField.imgUrl] : []);
+        const nextUrls = [...existing, ...uploadedUrls];
 
-    // store ONLY the URL in edits
+        return {
+          ...prev,
+          [fieldId]: {
+            ...prevField,
+            imgUrls: nextUrls,
+            imgUrl: nextUrls[0] || "",
+          },
+        };
+      });
+    }
+
+    setLocalImages((prev) => ({
+      ...prev,
+      [fieldId]: [],
+    }));
+  }, []);
+
+  const deleteImage = useCallback(async (fieldId: string, imageUrl: string) => {
+    if (imageUrl) {
+      const res = await fetch("/api/public/upload/image", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: imageUrl }),
+      });
+
+      if (!res.ok) {
+        console.error("Image delete failed");
+        return;
+      }
+    }
+
     setEdits((prev) => {
       const prevField = prev[fieldId] || {};
+      const existing = prevField.imgUrls || (prevField.imgUrl ? [prevField.imgUrl] : []);
+      const nextUrls = existing.filter((url) => url !== imageUrl);
+
       return {
         ...prev,
-        [fieldId]: { ...prevField, imgUrl: url },
+        [fieldId]: {
+          ...prevField,
+          imgUrls: nextUrls,
+          imgUrl: nextUrls[0] || "",
+        },
       };
+    });
+
+    setLocalImages((prev) => {
+      if (!(fieldId in prev)) return prev;
+      const next = { ...prev };
+      next[fieldId] = [];
+      return next;
     });
   }, []);
 
@@ -201,7 +272,7 @@ export default function FormPage() {
     const newEdits: FormEdits = {};
     newSide.sections.forEach((section) =>
       section.fields.forEach((f) => {
-        newEdits[f.fieldId] = { selected: "", comment: "", imgUrl: "" };
+        newEdits[f.fieldId] = { selected: "", comment: "", imgUrls: [], imgUrl: "" };
       })
     );
     setEdits((prev) => ({ ...prev, ...newEdits }));
@@ -237,7 +308,7 @@ export default function FormPage() {
 
     setEdits((prev) => ({
       ...prev,
-      [newField.fieldId]: { selected: "", comment: "", imgUrl: "" },
+      [newField.fieldId]: { selected: "", comment: "", imgUrls: [], imgUrl: "" },
     }));
   }, []);
 
@@ -546,6 +617,7 @@ export default function FormPage() {
             saveOption={saveOption}
             saveComment={saveComment}
             saveImage={saveImage}
+            deleteImage={deleteImage}
             className="form-page-ul-li"
           />
         ))}
@@ -559,6 +631,7 @@ export default function FormPage() {
             saveOption={saveOption}
             saveComment={saveComment}
             saveImage={saveImage}
+            deleteImage={deleteImage}
             projectId={projectId as string}
             formId={formId as string}
             onAddCustomField={handleAddCustomField}

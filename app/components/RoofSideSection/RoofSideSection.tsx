@@ -7,10 +7,11 @@ import WarningModal from "@/app/components/WarningModal/WarningModal";
 interface RoofSideSectionProps {
   roofSide: RoofSide;
   edits: FormEdits;
-  localImages: { [fieldId: string]: File | null };
+  localImages: { [fieldId: string]: File[] };
   saveOption: (fieldId: string, option: string) => void;
   saveComment: (fieldId: string, comment: string) => void;
-  saveImage: (fieldId: string, file: File) => void;
+  saveImage: (fieldId: string, files: File[]) => Promise<void>;
+  deleteImage: (fieldId: string, imageUrl: string) => Promise<void>;
   projectId: string;
   formId: string;
   // callback receives the id of the deleted side so the parent can prune storage
@@ -26,6 +27,7 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
   saveOption,
   saveComment,
   saveImage,
+  deleteImage,
   projectId,
   formId,
   onRoofSideDeleted,
@@ -132,6 +134,7 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
                       saveOption={saveOption}
                       saveComment={saveComment}
                       saveImage={saveImage}
+                      deleteImage={deleteImage}
                       className="form-page-ul-li"
                       onDelete={field._isCustom ? () => onRemoveCustomField(roofSide.id, section.id, field.fieldId) : undefined}
                     />

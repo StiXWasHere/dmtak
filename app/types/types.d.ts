@@ -38,6 +38,7 @@ type FormField = {
     options?: Array<'Godkänt'| 'Ej godkänt'| 'Ej aktuellt'| 'Avhjälpt'| 'Ej utförd'>;
     selected?: string;
     comment?: string;
+    imgUrls?: string[];
     imgUrl?: string;
     _isCustom?: boolean;
 }
@@ -72,6 +73,7 @@ type FormEdits = {
   [fieldId: string]: {
     selected: string;
     comment: string;
+        imgUrls?: string[];
     imgUrl?: string;
   };
 };

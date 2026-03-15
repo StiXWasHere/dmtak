@@ -80,17 +80,27 @@ export async function DELETE(
         const data = fdoc.data() as any;
 
         // collect image urls from form fields
-        const imageUrls: string[] = [];
+        const imageUrls = new Set<string>();
         if (Array.isArray(data.generalSection)) {
           data.generalSection.forEach((field: any) => {
-            if (field?.imgUrl) imageUrls.push(field.imgUrl);
+            if (Array.isArray(field?.imgUrls)) {
+              field.imgUrls.forEach((url: string) => {
+                if (url) imageUrls.add(url);
+              });
+            }
+            if (field?.imgUrl) imageUrls.add(field.imgUrl);
           });
         }
         if (Array.isArray(data.roofSides)) {
           data.roofSides.forEach((side: any) => {
             side.sections?.forEach((section: any) => {
               section.fields?.forEach((field: any) => {
-                if (field?.imgUrl) imageUrls.push(field.imgUrl);
+                if (Array.isArray(field?.imgUrls)) {
+                  field.imgUrls.forEach((url: string) => {
+                    if (url) imageUrls.add(url);
+                  });
+                }
+                if (field?.imgUrl) imageUrls.add(field.imgUrl);
               });
             });
           });

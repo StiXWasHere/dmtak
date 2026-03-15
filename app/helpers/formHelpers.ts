@@ -35,21 +35,40 @@ export const createCustomField = (title: string): FormField => ({
   options: [...defaultFieldOptions],
   selected: "",
   comment: "",
+  imgUrls: [],
   imgUrl: "",
   _isCustom: true,
 });
 
+function normalizeImageUrls(field: { imgUrls?: string[]; imgUrl?: string }) {
+  if (Array.isArray(field.imgUrls) && field.imgUrls.length > 0) {
+    return field.imgUrls;
+  }
+  if (field.imgUrl) {
+    return [field.imgUrl];
+  }
+  return [];
+}
+
 // Merge a field with current edits and local image reference
 export function mergeFieldForSave(
   field: FormField,
-  editsForField: { selected?: string; comment?: string; imgUrl?: string } | undefined,
-  localImagesMap: { [fieldId: string]: File | null }
+  editsForField: { selected?: string; comment?: string; imgUrls?: string[]; imgUrl?: string } | undefined,
+  localImagesMap: { [fieldId: string]: File[] }
 ): FormFieldWithLocalImage {
   const merged: FormFieldWithLocalImage = { ...field };
+  const imageUrls =
+    editsForField?.imgUrls && editsForField.imgUrls.length > 0
+      ? editsForField.imgUrls
+      : editsForField?.imgUrl
+      ? [editsForField.imgUrl]
+      : normalizeImageUrls(field);
+
   merged.selected = editsForField?.selected ?? field.selected ?? "";
   merged.comment = editsForField?.comment ?? field.comment ?? "";
-  merged.imgUrl = editsForField?.imgUrl ?? field.imgUrl ?? "";
-  merged._hasLocalImage = !!localImagesMap[field.fieldId];
+  merged.imgUrls = imageUrls;
+  merged.imgUrl = imageUrls[0] ?? "";
+  merged._hasLocalImage = (localImagesMap[field.fieldId]?.length ?? 0) > 0;
   return merged;
 }
 
@@ -57,9 +76,8 @@ export function mergeFieldForSave(
 export function buildUpdatedGeneralSection(
   originalFields: FormField[],
   editsMap: FormEdits,
-  localImagesMap: { [fieldId: string]: File | null }
+  localImagesMap: { [fieldId: string]: File[] }
 ): FormField[] {
-  console.log("buildUpdatedGeneralSection images:" + localImagesMap)
   return originalFields.map((f) => mergeFieldForSave(f, editsMap[f.fieldId], localImagesMap));
 }
 
@@ -67,7 +85,7 @@ export function buildUpdatedGeneralSection(
 export function buildUpdatedRoofSides(
   roofSides: RoofSide[] | undefined,
   editsMap: FormEdits,
-  localImagesMap: { [fieldId: string]: File | null }
+  localImagesMap: { [fieldId: string]: File[] }
 ): RoofSide[] | undefined {
   if (!roofSides) return undefined;
 
