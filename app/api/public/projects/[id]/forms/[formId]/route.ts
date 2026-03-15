@@ -49,11 +49,16 @@ function extractPublicId(url: string) {
 }
 
 function collectFormImageUrls(form: Form) {
-  const imageUrls: string[] = [];
+  const imageUrls = new Set<string>();
 
   if (Array.isArray(form.generalSection)) {
     form.generalSection.forEach((field) => {
-      if (field.imgUrl) imageUrls.push(field.imgUrl);
+      if (Array.isArray(field.imgUrls)) {
+        field.imgUrls.forEach((url) => {
+          if (url) imageUrls.add(url);
+        });
+      }
+      if (field.imgUrl) imageUrls.add(field.imgUrl);
     });
   }
 
@@ -61,13 +66,18 @@ function collectFormImageUrls(form: Form) {
     form.roofSides.forEach((side) => {
       side.sections?.forEach((section) => {
         section.fields?.forEach((field) => {
-          if (field.imgUrl) imageUrls.push(field.imgUrl);
+          if (Array.isArray(field.imgUrls)) {
+            field.imgUrls.forEach((url) => {
+              if (url) imageUrls.add(url);
+            });
+          }
+          if (field.imgUrl) imageUrls.add(field.imgUrl);
         });
       });
     });
   }
 
-  return imageUrls;
+  return Array.from(imageUrls);
 }
 
 export async function GET(

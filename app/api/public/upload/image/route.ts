@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import sharp from "sharp";
+import { deleteImage } from "@/lib/actions/deleteImage";
 
 //Upload to Cloudinary setup
 
@@ -55,5 +56,22 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const url = body?.url as string | undefined;
+
+    if (!url) {
+      return NextResponse.json({ error: "Missing image URL" }, { status: 400 });
+    }
+
+    const result = await deleteImage(url);
+    return NextResponse.json(result);
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }

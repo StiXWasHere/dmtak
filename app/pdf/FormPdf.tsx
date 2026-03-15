@@ -216,9 +216,13 @@ export default function FormPdf({ form }: Props) {
                   <Text>Kommentar: {field.comment}</Text>
                 )}
 
-                {field.imgUrl && (
-                  <Image src={field.imgUrl} style={styles.img} />
-                )}
+                {(field.imgUrls && field.imgUrls.length > 0
+                  ? field.imgUrls
+                  : field.imgUrl
+                  ? [field.imgUrl]
+                  : []).map((url, index) => (
+                  <Image key={`${field.fieldId}-general-${index}`} src={url} style={styles.img} />
+                ))}
               </View>
             ))}
           </View>
@@ -269,12 +273,17 @@ export default function FormPdf({ form }: Props) {
                         <Text>Kommentar: {field.comment}</Text>
                       )}
 
-                      {field.imgUrl && (
+                      {(field.imgUrls && field.imgUrls.length > 0
+                        ? field.imgUrls
+                        : field.imgUrl
+                        ? [field.imgUrl]
+                        : []).map((url, index) => (
                         <Image
-                          src={field.imgUrl}
+                          key={`${field.fieldId}-roof-${index}`}
+                          src={url}
                           style={styles.img}
                         />
-                      )}
+                      ))}
                     </View>
                   ))}
                 </View>

@@ -21,15 +21,20 @@ function extractPublicId(url: string) {
 }
 
 function collectRoofSideImageUrls(roofSide: RoofSide) {
-  const imageUrls: string[] = [];
+  const imageUrls = new Set<string>();
 
   roofSide.sections?.forEach((section) => {
     section.fields?.forEach((field) => {
-      if (field.imgUrl) imageUrls.push(field.imgUrl);
+      if (Array.isArray(field.imgUrls)) {
+        field.imgUrls.forEach((url) => {
+          if (url) imageUrls.add(url);
+        });
+      }
+      if (field.imgUrl) imageUrls.add(field.imgUrl);
     });
   });
 
-  return imageUrls;
+  return Array.from(imageUrls);
 }
 
 export async function deleteRoofSide(

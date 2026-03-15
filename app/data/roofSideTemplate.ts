@@ -502,6 +502,16 @@ export const roofSideTemplate: RoofSide = {
           fieldId: "Takdetaljer4"
         }
       ]
+    },
+    {
+      id: "Ovrig",
+      title: "Övriga kommentarer",
+      fields: [
+        {
+          title: "Övriga kommentarer och iakttagelser som inte täcks av ovanstående punkter",
+          fieldId: "Ovrig1"
+        }
+      ]
     }
   ]
 };
