@@ -112,8 +112,22 @@ const styles = StyleSheet.create({
   },
 
   img: {
-    width: 180,
+    height: 120,
+    objectFit: "contain",
+    borderRadius: 2,
+    alignSelf: "flex-start",
+  },
+
+  imageGrid: {
     marginTop: 6,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "flex-start",
+  },
+
+  imageCell: {
+    marginRight: 8,
+    marginBottom: 8,
   },
 });
 
@@ -188,7 +202,7 @@ export default function FormPdf({ form }: Props) {
             {form.generalSection
               .filter((field) => field.selected && field.selected !== "Ej aktuellt" && field.selected !== "Ej utförd")
               .map((field) => (
-              <View key={field.fieldId} style={styles.field} wrap={false}>
+              <View key={field.fieldId} style={styles.field}>
                 <Text style={styles.label}>{field.title}:</Text>
 
                 {field.selected ? (
@@ -220,9 +234,19 @@ export default function FormPdf({ form }: Props) {
                   ? field.imgUrls
                   : field.imgUrl
                   ? [field.imgUrl]
-                  : []).map((url, index) => (
-                  <Image key={`${field.fieldId}-general-${index}`} src={url} style={styles.img} />
-                ))}
+                  : []).length > 0 && (
+                  <View style={styles.imageGrid}>
+                    {(field.imgUrls && field.imgUrls.length > 0
+                      ? field.imgUrls
+                      : field.imgUrl
+                      ? [field.imgUrl]
+                      : []).map((url, index) => (
+                      <View key={`${field.fieldId}-general-${index}`} style={styles.imageCell}>
+                        <Image src={url} style={styles.img} />
+                      </View>
+                    ))}
+                  </View>
+                )}
               </View>
             ))}
           </View>
@@ -244,7 +268,6 @@ export default function FormPdf({ form }: Props) {
                     <View
                       key={field.fieldId}
                       style={styles.field}
-                      wrap={false}
                     >
                       <Text style={styles.label}>{field.title}:</Text>
 
@@ -277,13 +300,19 @@ export default function FormPdf({ form }: Props) {
                         ? field.imgUrls
                         : field.imgUrl
                         ? [field.imgUrl]
-                        : []).map((url, index) => (
-                        <Image
-                          key={`${field.fieldId}-roof-${index}`}
-                          src={url}
-                          style={styles.img}
-                        />
-                      ))}
+                        : []).length > 0 && (
+                        <View style={styles.imageGrid}>
+                          {(field.imgUrls && field.imgUrls.length > 0
+                            ? field.imgUrls
+                            : field.imgUrl
+                            ? [field.imgUrl]
+                            : []).map((url, index) => (
+                            <View key={`${field.fieldId}-roof-${index}`} style={styles.imageCell}>
+                              <Image src={url} style={styles.img} />
+                            </View>
+                          ))}
+                        </View>
+                      )}
                     </View>
                   ))}
                 </View>
