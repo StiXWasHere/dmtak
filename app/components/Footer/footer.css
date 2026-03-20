@@ -31,4 +31,10 @@
   background: none;
 }
 
+@media (min-width: 1024px) {
+  .footer {
+    display: none;
+  }
+}
+
 /*# sourceMappingURL=footer.css.map */

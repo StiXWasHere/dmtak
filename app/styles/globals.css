@@ -112,8 +112,8 @@ input {
 }
 
 #NavNextLinkThin {
-  width: clamp(16rem, 40vw, 25rem);
-  height: clamp(3rem, 5vw, 5rem);
+  width: clamp(16rem, 40vw, 20rem);
+  height: clamp(3rem, 4vw, 3.5rem);
   background-color: rgb(220, 4, 43);
   color: rgb(254, 254, 254);
   border: none;
@@ -131,8 +131,8 @@ input {
 }
 
 #NavBtnThin {
-  width: clamp(16rem, 40vw, 25rem);
-  height: clamp(3rem, 5vw, 5rem);
+  width: clamp(16rem, 40vw, 20rem);
+  height: clamp(3rem, 4vw, 3.5rem);
   background-color: rgb(220, 4, 43);
   color: rgb(254, 254, 254);
   border: none;

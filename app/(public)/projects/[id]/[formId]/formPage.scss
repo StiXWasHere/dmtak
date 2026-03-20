@@ -2,7 +2,7 @@
 
 .form-page {
     margin-block: 3rem;
-    margin-inline: 1rem;
+    margin-inline: clamp(1rem, 4vw, 3rem);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -53,6 +53,7 @@
       width: 100%;
       padding: .5rem;
       box-sizing: border-box;
+      resize: none;
     }
 
     &-img-container { /* this is fine since your class is still applied */
@@ -80,6 +81,7 @@
 
       .radio-input {
         display: none;
+
       }
 
       .radio-box {
@@ -89,6 +91,12 @@
         border: 1px solid #333;
         border-radius: 2px;
         position: relative;
+
+        transition: all 0.3s ease;
+
+        &:hover {
+          background-color: $red;
+        }
       }
 
       .radio-input:checked + .radio-box::after {
@@ -165,7 +173,15 @@
     border-radius: .4rem;
     width: 70%;
 
+    transition: all 0.3s ease;
+
     cursor: pointer;
+
+    &:hover {
+        opacity: 100%;
+        background-color: $grey-dark;
+        color: $white;
+    }
 
     &:focus {
       color: $red;
@@ -249,4 +265,14 @@
 .image-uploading-text {
   font-size: .85rem;
   color: $grey-dark;
+}
+
+@media (min-width: 1024px) {
+    .form-page {
+        margin-inline: clamp(16rem, 32vw, 48rem);
+    }
+
+    #ImgSubmitBtn {
+        width: 40%;
+    }
 }

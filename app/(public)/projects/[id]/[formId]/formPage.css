@@ -1,6 +1,6 @@
 .form-page {
   margin-block: 3rem;
-  margin-inline: 1rem;
+  margin-inline: clamp(1rem, 4vw, 3rem);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -46,6 +46,7 @@
   width: 100%;
   padding: 0.5rem;
   box-sizing: border-box;
+  resize: none;
 }
 .form-page .form-page-ul-li-img-container { /* this is fine since your class is still applied */
   display: flex;
@@ -78,6 +79,10 @@
   border: 1px solid #333;
   border-radius: 2px;
   position: relative;
+  transition: all 0.3s ease;
+}
+.form-page .form-page-ul-li-input .radio-box:hover {
+  background-color: rgb(220, 4, 43);
 }
 .form-page .form-page-ul-li-input .radio-input:checked + .radio-box::after {
   content: "";
@@ -149,7 +154,13 @@
   border: 1px solid rgb(15, 15, 15);
   border-radius: 0.4rem;
   width: 70%;
+  transition: all 0.3s ease;
   cursor: pointer;
+}
+#ImgSubmitBtn:hover {
+  opacity: 100%;
+  background-color: rgb(150, 150, 150);
+  color: rgb(254, 254, 254);
 }
 #ImgSubmitBtn:focus {
   color: rgb(220, 4, 43);
@@ -232,6 +243,15 @@
 .image-uploading-text {
   font-size: 0.85rem;
   color: rgb(150, 150, 150);
+}
+
+@media (min-width: 1024px) {
+  .form-page {
+    margin-inline: clamp(16rem, 32vw, 48rem);
+  }
+  #ImgSubmitBtn {
+    width: 40%;
+  }
 }
 
 /*# sourceMappingURL=formPage.css.map */
