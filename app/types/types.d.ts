@@ -75,6 +75,7 @@ type FormEdits = {
     comment: string;
         imgUrls?: string[];
     imgUrl?: string;
+        imageTouched?: boolean;
   };
 };
 

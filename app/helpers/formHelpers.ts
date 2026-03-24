@@ -53,16 +53,27 @@ function normalizeImageUrls(field: { imgUrls?: string[]; imgUrl?: string }) {
 // Merge a field with current edits and local image reference
 export function mergeFieldForSave(
   field: FormField,
-  editsForField: { selected?: string; comment?: string; imgUrls?: string[]; imgUrl?: string } | undefined,
+  editsForField: {
+    selected?: string;
+    comment?: string;
+    imgUrls?: string[];
+    imgUrl?: string;
+    imageTouched?: boolean;
+  } | undefined,
   localImagesMap: { [fieldId: string]: File[] }
 ): FormFieldWithLocalImage {
   const merged: FormFieldWithLocalImage = { ...field };
-  const imageUrls =
-    editsForField?.imgUrls && editsForField.imgUrls.length > 0
+  const imageUrls = editsForField?.imageTouched
+    ? Array.isArray(editsForField.imgUrls)
       ? editsForField.imgUrls
-      : editsForField?.imgUrl
+      : editsForField.imgUrl
       ? [editsForField.imgUrl]
-      : normalizeImageUrls(field);
+      : []
+    : editsForField?.imgUrls && editsForField.imgUrls.length > 0
+    ? editsForField.imgUrls
+    : editsForField?.imgUrl
+    ? [editsForField.imgUrl]
+    : normalizeImageUrls(field);
 
   merged.selected = editsForField?.selected ?? field.selected ?? "";
   merged.comment = editsForField?.comment ?? field.comment ?? "";

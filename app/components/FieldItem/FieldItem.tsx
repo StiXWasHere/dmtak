@@ -6,6 +6,7 @@ interface FieldItemProps {
   field: FormField;
   edits: FormEdits;
   localImages: { [fieldId: string]: File[] };
+  uploadError?: string;
   saveOption: (fieldId: string, option: string) => void;
   saveComment: (fieldId: string, comment: string) => void;
   saveImage: (fieldId: string, files: File[]) => Promise<void>;
@@ -14,7 +15,7 @@ interface FieldItemProps {
   onDelete?: () => void;
 }
 
-export const FieldItem = React.memo(({ field, edits, localImages, saveOption, saveComment, saveImage, deleteImage, className, onDelete }: FieldItemProps) => {
+export const FieldItem = React.memo(({ field, edits, localImages, uploadError, saveOption, saveComment, saveImage, deleteImage, className, onDelete }: FieldItemProps) => {
   const selected = edits[field.fieldId]?.selected || "";
   const imageUrls = edits[field.fieldId]?.imgUrls?.length
     ? edits[field.fieldId]?.imgUrls || []
@@ -116,6 +117,9 @@ export const FieldItem = React.memo(({ field, edits, localImages, saveOption, sa
         ))}
         {localImageCount > 0 && (
           <p className="image-uploading-text">Laddar upp {localImageCount} bild(er)...</p>
+        )}
+        {uploadError && (
+          <p className="image-upload-error" role="alert">{uploadError}</p>
         )}
       </div>
     </div>

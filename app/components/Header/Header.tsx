@@ -47,7 +47,7 @@ function Header() {
             )}
 
             <li>
-              <a href="/sign-in">Logga in</a>
+              <a href="/sign-in" className='header-content-list-tag'>Logga in</a>
             </li>
         </ul>
         </div>
@@ -85,10 +85,10 @@ function Header() {
               </li>
             )}
 
-            {role === 'admin' && <li><a href="/admin">Admin</a></li>}
+            {role === 'admin' && <li><a href="/admin" className='header-content-list-tag'>Admin</a></li>}
             <li>
               <SignOutButton>
-                <a>Logga ut</a>
+                <a className='header-content-list-tag'>Logga ut</a>
               </SignOutButton>
             </li>
         </ul>

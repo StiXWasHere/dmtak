@@ -8,6 +8,7 @@ interface RoofSideSectionProps {
   roofSide: RoofSide;
   edits: FormEdits;
   localImages: { [fieldId: string]: File[] };
+  uploadErrors: { [fieldId: string]: string | null };
   saveOption: (fieldId: string, option: string) => void;
   saveComment: (fieldId: string, comment: string) => void;
   saveImage: (fieldId: string, files: File[]) => Promise<void>;
@@ -24,6 +25,7 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
   roofSide,
   edits,
   localImages,
+  uploadErrors,
   saveOption,
   saveComment,
   saveImage,
@@ -131,6 +133,7 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
                       field={field}
                       edits={edits}
                       localImages={localImages}
+                      uploadError={uploadErrors[field.fieldId] || undefined}
                       saveOption={saveOption}
                       saveComment={saveComment}
                       saveImage={saveImage}
