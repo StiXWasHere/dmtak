@@ -23,6 +23,7 @@ export default function FormPage() {
   const [form, setForm] = useState<Form | null>(null);
   const [edits, setEdits] = useState<FormEdits>({});
   const [localImages, setLocalImages] = useState<{ [fieldId: string]: File[] }>({});
+  const [uploadErrors, setUploadErrors] = useState<{ [fieldId: string]: string | null }>({});
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingForm, setDeletingForm] = useState(false);
@@ -53,6 +54,42 @@ export default function FormPage() {
       if (!res.ok) throw new Error("Failed to load form");
       let data: Form = await res.json();
 
+      const mergeRoofSideWithSavedStructure = (serverSide: RoofSide, localSide: RoofSide): RoofSide => {
+        const mergedSections = localSide.sections.map((localSection) => {
+          const serverSection = serverSide.sections.find((section) => section.id === localSection.id);
+
+          if (!serverSection) {
+            return localSection;
+          }
+
+          const mergedFields = localSection.fields.map((localField) => {
+            const serverField = serverSection.fields.find((field) => field.fieldId === localField.fieldId);
+
+            if (!serverField) {
+              return localField;
+            }
+
+            return {
+              ...localField,
+              ...serverField,
+              _isCustom: localField._isCustom ?? serverField._isCustom,
+            };
+          });
+
+          return {
+            ...serverSection,
+            ...localSection,
+            fields: mergedFields,
+          };
+        });
+
+        return {
+          ...serverSide,
+          ...localSide,
+          sections: mergedSections,
+        };
+      };
+
       // restore any previously‑saved form structure (roof sides, titles, …)
       // only keep local roof sides that the server hasn’t already discarded.
       const savedForm = localStorage.getItem(formStorageKey);
@@ -68,7 +105,9 @@ export default function FormPage() {
             // field add/remove changes survive reloads
             const mergedExisting = serverSides.map((serverSide) => {
               const localSide = localById.get(serverSide.id);
-              return localSide ? localSide : serverSide;
+              return localSide
+                ? mergeRoofSideWithSavedStructure(serverSide, localSide)
+                : serverSide;
             });
 
             const existingIds = new Set(serverSides.map((s) => s.id));
@@ -92,9 +131,15 @@ export default function FormPage() {
       // localStorage takes priority so recent unsaved changes aren't overwritten
       const initialEdits: FormEdits = {};
       const getImageUrls = (savedField: any, field: FormField) => {
-        if (Array.isArray(savedField?.imgUrls)) return savedField.imgUrls;
+        if (savedField?.imageTouched) {
+          if (Array.isArray(savedField?.imgUrls)) return savedField.imgUrls;
+          if (savedField?.imgUrl) return [savedField.imgUrl];
+          return [];
+        }
+
+        if (Array.isArray(savedField?.imgUrls) && savedField.imgUrls.length > 0) return savedField.imgUrls;
         if (savedField?.imgUrl) return [savedField.imgUrl];
-        if (Array.isArray(field.imgUrls)) return field.imgUrls;
+        if (Array.isArray(field.imgUrls) && field.imgUrls.length > 0) return field.imgUrls;
         if (field.imgUrl) return [field.imgUrl];
         return [];
       };
@@ -106,6 +151,7 @@ export default function FormPage() {
           comment: saved[f.fieldId]?.comment || f.comment || "",
           imgUrls: imageUrls,
           imgUrl: imageUrls[0] || "",
+          imageTouched: saved[f.fieldId]?.imageTouched === true,
         };
       });
       data.roofSides?.forEach((side) =>
@@ -117,6 +163,7 @@ export default function FormPage() {
               comment: saved[f.fieldId]?.comment || f.comment || "",
               imgUrls: imageUrls,
               imgUrl: imageUrls[0] || "",
+              imageTouched: saved[f.fieldId]?.imageTouched === true,
             };
           })
         )
@@ -178,52 +225,99 @@ export default function FormPage() {
   const saveImage = useCallback(async (fieldId: string, files: File[]) => {
     if (!files.length) return;
 
+    setUploadErrors((prev) => ({ ...prev, [fieldId]: null }));
     setLocalImages((prev) => ({
       ...prev,
       [fieldId]: [...(prev[fieldId] || []), ...files],
     }));
 
     const uploadedUrls: string[] = [];
+    let failedUploads = 0;
 
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append("file", file);
+    try {
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
 
-      const res = await fetch("/api/public/upload/image", {
-        method: "POST",
-        body: formData,
-      });
+        const res = await fetch("/api/public/upload/image", {
+          method: "POST",
+          body: formData,
+        });
 
-      if (!res.ok) {
-        console.error("Image upload failed");
-        continue;
+        if (!res.ok) {
+          failedUploads += 1;
+          let errorMessage = "Bilduppladdning misslyckades";
+
+          try {
+            const data = await res.json();
+            if (typeof data?.error === "string" && data.error.trim()) {
+              errorMessage = data.error;
+            }
+          } catch {
+            try {
+              const text = await res.text();
+              if (text.trim()) {
+                errorMessage = text;
+              }
+            } catch {
+              // Keep the default error message.
+            }
+          }
+
+          console.error("Image upload failed", errorMessage);
+          continue;
+        }
+
+        const { url } = await res.json();
+        if (url) {
+          uploadedUrls.push(url);
+        } else {
+          failedUploads += 1;
+        }
       }
 
-      const { url } = await res.json();
-      if (url) uploadedUrls.push(url);
-    }
+      if (uploadedUrls.length > 0) {
+        setEdits((prev) => {
+          const prevField = prev[fieldId] || {};
+          const existing = prevField.imgUrls || (prevField.imgUrl ? [prevField.imgUrl] : []);
+          const nextUrls = [...existing, ...uploadedUrls];
 
-    if (uploadedUrls.length > 0) {
-      setEdits((prev) => {
-        const prevField = prev[fieldId] || {};
-        const existing = prevField.imgUrls || (prevField.imgUrl ? [prevField.imgUrl] : []);
-        const nextUrls = [...existing, ...uploadedUrls];
+          return {
+            ...prev,
+            [fieldId]: {
+              ...prevField,
+              imgUrls: nextUrls,
+              imgUrl: nextUrls[0] || "",
+              imageTouched: true,
+            },
+          };
+        });
+      }
 
-        return {
+      if (failedUploads > 0) {
+        setUploadErrors((prev) => ({
           ...prev,
-          [fieldId]: {
-            ...prevField,
-            imgUrls: nextUrls,
-            imgUrl: nextUrls[0] || "",
-          },
-        };
-      });
+          [fieldId]: failedUploads === files.length
+            ? "Kunde inte ladda upp bilden. Försök igen."
+            : `Kunde inte ladda upp ${failedUploads} av ${files.length} bilder. Försök igen.`,
+        }));
+      } else {
+        setUploadErrors((prev) => ({ ...prev, [fieldId]: null }));
+      }
+    } catch (error) {
+      console.error("Image upload failed", error);
+      setUploadErrors((prev) => ({
+        ...prev,
+        [fieldId]: files.length === 1
+          ? "Kunde inte ladda upp bilden. Försök igen."
+          : `Kunde inte ladda upp ${files.length} bilder. Försök igen.`,
+      }));
+    } finally {
+      setLocalImages((prev) => ({
+        ...prev,
+        [fieldId]: [],
+      }));
     }
-
-    setLocalImages((prev) => ({
-      ...prev,
-      [fieldId]: [],
-    }));
   }, []);
 
   const deleteImage = useCallback(async (fieldId: string, imageUrl: string) => {
@@ -251,6 +345,7 @@ export default function FormPage() {
           ...prevField,
           imgUrls: nextUrls,
           imgUrl: nextUrls[0] || "",
+          imageTouched: true,
         },
       };
     });
@@ -272,7 +367,7 @@ export default function FormPage() {
     const newEdits: FormEdits = {};
     newSide.sections.forEach((section) =>
       section.fields.forEach((f) => {
-        newEdits[f.fieldId] = { selected: "", comment: "", imgUrls: [], imgUrl: "" };
+        newEdits[f.fieldId] = { selected: "", comment: "", imgUrls: [], imgUrl: "", imageTouched: false };
       })
     );
     setEdits((prev) => ({ ...prev, ...newEdits }));
@@ -308,7 +403,7 @@ export default function FormPage() {
 
     setEdits((prev) => ({
       ...prev,
-      [newField.fieldId]: { selected: "", comment: "", imgUrls: [], imgUrl: "" },
+      [newField.fieldId]: { selected: "", comment: "", imgUrls: [], imgUrl: "", imageTouched: false },
     }));
   }, []);
 
@@ -614,6 +709,7 @@ export default function FormPage() {
             field={field}
             edits={edits}
             localImages={localImages}
+            uploadError={uploadErrors[field.fieldId] || undefined}
             saveOption={saveOption}
             saveComment={saveComment}
             saveImage={saveImage}
@@ -628,6 +724,7 @@ export default function FormPage() {
             roofSide={side}
             edits={edits}
             localImages={localImages}
+            uploadErrors={uploadErrors}
             saveOption={saveOption}
             saveComment={saveComment}
             saveImage={saveImage}

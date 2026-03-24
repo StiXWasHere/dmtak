@@ -245,6 +245,12 @@
   color: rgb(150, 150, 150);
 }
 
+.image-upload-error {
+  font-size: 0.85rem;
+  color: rgb(220, 4, 43);
+  text-align: center;
+}
+
 @media (min-width: 1024px) {
   .form-page {
     margin-inline: clamp(16rem, 32vw, 48rem);
