@@ -1,781 +1,156 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { FieldItem } from "@/app/components/FieldItem/FieldItem";
 import { RoofSideSection } from "@/app/components/RoofSideSection/RoofSideSection";
-import {
-  createRoofSide,
-  createCustomField,
-  buildUpdatedGeneralSection,
-  buildUpdatedRoofSides,
-} from "@/app/helpers/formHelpers";
 import "./formPage.css";
 import Spinner from "@/app/components/LoadingSpinner/LoadingSpinner";
-import { useFormHeader } from "@/app/context/FormHeaderContext";
 import WarningModal from "@/app/components/WarningModal/WarningModal";
-import { useUser } from "@clerk/nextjs";
+import { useProjectFormPage } from "@/app/hooks/useProjectFormPage";
 
 export default function FormPage() {
-  const { id: projectId, formId } = useParams();
-  const router = useRouter();
-  const { user } = useUser();
-  const [form, setForm] = useState<Form | null>(null);
-  const [edits, setEdits] = useState<FormEdits>({});
-  const [localImages, setLocalImages] = useState<{ [fieldId: string]: File[] }>({});
-  const [uploadErrors, setUploadErrors] = useState<{ [fieldId: string]: string | null }>({});
-  const [loading, setLoading] = useState(true);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deletingForm, setDeletingForm] = useState(false);
-
-  const [customerParticipants, setCustomerParticipants] = useState("");
-  const [workerParticipants, setWorkerParticipants] = useState("");
-
-  const [generateError, setGenerateError] = useState<string | null>(null);
-
-  const { setHeader } = useFormHeader();
-
-  const timerRef = useRef<number | null>(null);
-  const autoSaveTimerRef = useRef<number | null>(null);
-  const storageKey = `form-edits-${projectId}-${formId}`;
-  // keep a copy of the whole form object as well – roof sides (and other
-  // structural changes) weren't being written to edits, so they vanished when
-  // the page re‑loaded.  we'll sync this key whenever `form` changes and
-  // restore it when we fetch from the server.
-  const formStorageKey = `form-data-${projectId}-${formId}`;
-
-  const role = user?.publicMetadata?.role;
-  const canDeleteForm = Boolean(user?.id) && (role === "admin" || form?.ownerId === user?.id);
-
-  const fetchForm = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/public/projects/${projectId}/forms/${formId}`);
-      if (!res.ok) throw new Error("Failed to load form");
-      let data: Form = await res.json();
-
-      const mergeRoofSideWithSavedStructure = (serverSide: RoofSide, localSide: RoofSide): RoofSide => {
-        const mergedSections = localSide.sections.map((localSection) => {
-          const serverSection = serverSide.sections.find((section) => section.id === localSection.id);
-
-          if (!serverSection) {
-            return localSection;
-          }
-
-          const mergedFields = localSection.fields.map((localField) => {
-            const serverField = serverSection.fields.find((field) => field.fieldId === localField.fieldId);
-
-            if (!serverField) {
-              return localField;
-            }
-
-            return {
-              ...localField,
-              ...serverField,
-              _isCustom: localField._isCustom ?? serverField._isCustom,
-            };
-          });
-
-          return {
-            ...serverSection,
-            ...localSection,
-            fields: mergedFields,
-          };
-        });
-
-        return {
-          ...serverSide,
-          ...localSide,
-          sections: mergedSections,
-        };
-      };
-
-      // restore any previously‑saved form structure (roof sides, titles, …)
-      // only keep local roof sides that the server hasn’t already discarded.
-      const savedForm = localStorage.getItem(formStorageKey);
-      if (savedForm) {
-        try {
-          const parsed: Form = JSON.parse(savedForm);
-          if (parsed.roofSides) {
-            const serverSides = data.roofSides || [];
-            const localSides = parsed.roofSides || [];
-            const localById = new Map(localSides.map((s) => [s.id, s]));
-
-            // prefer locally saved structure for existing side IDs so unsaved
-            // field add/remove changes survive reloads
-            const mergedExisting = serverSides.map((serverSide) => {
-              const localSide = localById.get(serverSide.id);
-              return localSide
-                ? mergeRoofSideWithSavedStructure(serverSide, localSide)
-                : serverSide;
-            });
-
-            const existingIds = new Set(serverSides.map((s) => s.id));
-            // only carry over sides that were created locally (_isLocal flag)
-            const newLocals = localSides.filter(
-              (s: RoofSide) => (s as any)._isLocal && !existingIds.has(s.id)
-            );
-
-            data = { ...data, roofSides: [...mergedExisting, ...newLocals] };
-          }
-        } catch (err) {
-          console.warn("could not parse saved form from storage", err);
-        }
-      }
-
-      setForm(data);
-
-      const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
-
-      // Initialize edits from DB + localStorage
-      // localStorage takes priority so recent unsaved changes aren't overwritten
-      const initialEdits: FormEdits = {};
-      const getImageUrls = (savedField: any, field: FormField) => {
-        if (savedField?.imageTouched) {
-          if (Array.isArray(savedField?.imgUrls)) return savedField.imgUrls;
-          if (savedField?.imgUrl) return [savedField.imgUrl];
-          return [];
-        }
-
-        if (Array.isArray(savedField?.imgUrls) && savedField.imgUrls.length > 0) return savedField.imgUrls;
-        if (savedField?.imgUrl) return [savedField.imgUrl];
-        if (Array.isArray(field.imgUrls) && field.imgUrls.length > 0) return field.imgUrls;
-        if (field.imgUrl) return [field.imgUrl];
-        return [];
-      };
-
-      data.generalSection.forEach((f) => {
-        const imageUrls = getImageUrls(saved[f.fieldId], f);
-        initialEdits[f.fieldId] = {
-          selected: saved[f.fieldId]?.selected || f.selected || "",
-          comment: saved[f.fieldId]?.comment || f.comment || "",
-          imgUrls: imageUrls,
-          imgUrl: imageUrls[0] || "",
-          imageTouched: saved[f.fieldId]?.imageTouched === true,
-        };
-      });
-      data.roofSides?.forEach((side) =>
-        side.sections.forEach((section) =>
-          section.fields.forEach((f) => {
-            const imageUrls = getImageUrls(saved[f.fieldId], f);
-            initialEdits[f.fieldId] = {
-              selected: saved[f.fieldId]?.selected || f.selected || "",
-              comment: saved[f.fieldId]?.comment || f.comment || "",
-              imgUrls: imageUrls,
-              imgUrl: imageUrls[0] || "",
-              imageTouched: saved[f.fieldId]?.imageTouched === true,
-            };
-          })
-        )
-      );
-      setEdits(initialEdits);
-
-      // Initialize participants
-      setCustomerParticipants(data.customerParticipants || "");
-      setWorkerParticipants(data.workerParticipants || "");
-    } catch (err: any) {
-      console.error(err);
-      alert(err.message || "Failed to load form");
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId, formId, storageKey, formStorageKey]);
-
-  // --- Load form and initialize edits ---
-  useEffect(() => {
-    if (!projectId || !formId) return;
-
-    fetchForm();
-  }, [projectId, formId, fetchForm]);
-
-  // --- Autosave edits to localStorage ---
-  useEffect(() => {
-    if (!loading) localStorage.setItem(storageKey, JSON.stringify(edits));
-  }, [edits, loading]);
-
-  // --- Persist structural changes (roof sides, name changes, etc.) ---
-  useEffect(() => {
-    if (!loading && form) {
-      // persist the full form object including _isLocal flags so that
-      // locally-created sides can be detected and restored on reload
-      localStorage.setItem(formStorageKey, JSON.stringify(form));
-    }
-  }, [form, loading, formStorageKey]);
-
-
-  // --- Handlers ---
-  const saveOption = useCallback((fieldId: string, option: string) => {
-    setEdits((prev) => {
-      const prevField = prev[fieldId] || {};
-      return { ...prev, [fieldId]: { ...prevField, selected: option } };
-    });
-  }, []);
-
-  const saveComment = useCallback((fieldId: string, comment: string) => {
-    setEdits((prev) => {
-      const prevField = prev[fieldId] || {};
-      return {
-        ...prev,
-        [fieldId]: { ...prevField, comment }
-      };
-    });
-  }, []);
-
-
-  const saveImage = useCallback(async (fieldId: string, files: File[]) => {
-    if (!files.length) return;
-
-    setUploadErrors((prev) => ({ ...prev, [fieldId]: null }));
-    setLocalImages((prev) => ({
-      ...prev,
-      [fieldId]: [...(prev[fieldId] || []), ...files],
-    }));
-
-    const uploadedUrls: string[] = [];
-    let failedUploads = 0;
-
-    try {
-      for (const file of files) {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const res = await fetch("/api/public/upload/image", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!res.ok) {
-          failedUploads += 1;
-          let errorMessage = "Bilduppladdning misslyckades";
-
-          try {
-            const data = await res.json();
-            if (typeof data?.error === "string" && data.error.trim()) {
-              errorMessage = data.error;
-            }
-          } catch {
-            try {
-              const text = await res.text();
-              if (text.trim()) {
-                errorMessage = text;
-              }
-            } catch {
-              // Keep the default error message.
-            }
-          }
-
-          console.error("Image upload failed", errorMessage);
-          continue;
-        }
-
-        const { url } = await res.json();
-        if (url) {
-          uploadedUrls.push(url);
-        } else {
-          failedUploads += 1;
-        }
-      }
-
-      if (uploadedUrls.length > 0) {
-        setEdits((prev) => {
-          const prevField = prev[fieldId] || {};
-          const existing = prevField.imgUrls || (prevField.imgUrl ? [prevField.imgUrl] : []);
-          const nextUrls = [...existing, ...uploadedUrls];
-
-          return {
-            ...prev,
-            [fieldId]: {
-              ...prevField,
-              imgUrls: nextUrls,
-              imgUrl: nextUrls[0] || "",
-              imageTouched: true,
-            },
-          };
-        });
-      }
-
-      if (failedUploads > 0) {
-        setUploadErrors((prev) => ({
-          ...prev,
-          [fieldId]: failedUploads === files.length
-            ? "Kunde inte ladda upp bilden. Försök igen."
-            : `Kunde inte ladda upp ${failedUploads} av ${files.length} bilder. Försök igen.`,
-        }));
-      } else {
-        setUploadErrors((prev) => ({ ...prev, [fieldId]: null }));
-      }
-    } catch (error) {
-      console.error("Image upload failed", error);
-      setUploadErrors((prev) => ({
-        ...prev,
-        [fieldId]: files.length === 1
-          ? "Kunde inte ladda upp bilden. Försök igen."
-          : `Kunde inte ladda upp ${files.length} bilder. Försök igen.`,
-      }));
-    } finally {
-      setLocalImages((prev) => ({
-        ...prev,
-        [fieldId]: [],
-      }));
-    }
-  }, []);
-
-  const deleteImage = useCallback(async (fieldId: string, imageUrl: string) => {
-    if (imageUrl) {
-      const res = await fetch("/api/public/upload/image", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: imageUrl }),
-      });
-
-      if (!res.ok) {
-        console.error("Image delete failed");
-        return;
-      }
-    }
-
-    setEdits((prev) => {
-      const prevField = prev[fieldId] || {};
-      const existing = prevField.imgUrls || (prevField.imgUrl ? [prevField.imgUrl] : []);
-      const nextUrls = existing.filter((url) => url !== imageUrl);
-
-      return {
-        ...prev,
-        [fieldId]: {
-          ...prevField,
-          imgUrls: nextUrls,
-          imgUrl: nextUrls[0] || "",
-          imageTouched: true,
-        },
-      };
-    });
-
-    setLocalImages((prev) => {
-      if (!(fieldId in prev)) return prev;
-      const next = { ...prev };
-      next[fieldId] = [];
-      return next;
-    });
-  }, []);
-
-
-  const addRoofSideHandler = (name?: string) => {
-    if (!form) return;
-    const newSide = createRoofSide(name, form.roofSides?.length);
-    setForm({ ...form, roofSides: [...(form.roofSides || []), newSide] });
-
-    const newEdits: FormEdits = {};
-    newSide.sections.forEach((section) =>
-      section.fields.forEach((f) => {
-        newEdits[f.fieldId] = { selected: "", comment: "", imgUrls: [], imgUrl: "", imageTouched: false };
-      })
-    );
-    setEdits((prev) => ({ ...prev, ...newEdits }));
-  };
-
-  const handleAddCustomField = useCallback((roofSideId: string, sectionId: string, title: string) => {
-    const trimmedTitle = title.trim();
-    if (!trimmedTitle) return;
-
-    const newField = createCustomField(trimmedTitle);
-
-    setForm((prev) => {
-      if (!prev) return prev;
-
-      return {
-        ...prev,
-        roofSides: (prev.roofSides || []).map((side) => {
-          if (side.id !== roofSideId) return side;
-
-          return {
-            ...side,
-            sections: side.sections.map((section) => {
-              if (section.id !== sectionId) return section;
-              return {
-                ...section,
-                fields: [...section.fields, newField],
-              };
-            }),
-          };
-        }),
-      };
-    });
-
-    setEdits((prev) => ({
-      ...prev,
-      [newField.fieldId]: { selected: "", comment: "", imgUrls: [], imgUrl: "", imageTouched: false },
-    }));
-  }, []);
-
-  const handleRemoveCustomField = useCallback((roofSideId: string, sectionId: string, fieldId: string) => {
-    setForm((prev) => {
-      if (!prev) return prev;
-
-      return {
-        ...prev,
-        roofSides: (prev.roofSides || []).map((side) => {
-          if (side.id !== roofSideId) return side;
-
-          return {
-            ...side,
-            sections: side.sections.map((section) => {
-              if (section.id !== sectionId) return section;
-              return {
-                ...section,
-                fields: section.fields.filter((field) => field.fieldId !== fieldId),
-              };
-            }),
-          };
-        }),
-      };
-    });
-
-    setEdits((prev) => {
-      const next = { ...prev };
-      delete next[fieldId];
-      return next;
-    });
-
-    setLocalImages((prev) => {
-      if (!(fieldId in prev)) return prev;
-      const next = { ...prev };
-      delete next[fieldId];
-      return next;
-    });
-  }, []);
-
-  // helper that actually hits the backend; returns saved form or null if
-  // nothing changed. does *not* touch header state.
-  const lastSavedPayload = useRef<string | null>(null);
-  const savingInFlightRef = useRef(false);
-
-  const doSave = useCallback(async (): Promise<Form | null> => {
-    if (!form) return null;
-
-    const updatedGeneral = buildUpdatedGeneralSection(
-      form.generalSection,
-      edits,
-      localImages
-    );
-
-    const updatedRoofSides = buildUpdatedRoofSides(
-      form.roofSides,
-      edits,
-      localImages
-    );
-
-    const payload = {
-      ...form,
-      generalSection: updatedGeneral,
-      roofSides: updatedRoofSides || [],
-      customerParticipants: customerParticipants.trim() || undefined,
-      workerParticipants: workerParticipants.trim() || undefined,
-    };
-
-    const str = JSON.stringify(payload);
-    if (lastSavedPayload.current === str) {
-      return null; // nothing to do
-    }
-
-    // clear any pending autosave timer since we're saving now
-    if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current);
-      autoSaveTimerRef.current = null;
-    }
-
-    const res = await fetch(
-      `/api/public/projects/${projectId}/forms/${formId}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: str,
-      }
-    );
-
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`Server returned ${res.status}: ${body}`);
-    }
-
-    const saved: Form = await res.json();
-    lastSavedPayload.current = str;
-
-    // clear cache keys
-    localStorage.removeItem(storageKey);
-    localStorage.removeItem(formStorageKey);
-    setLocalImages({});
-
-    setForm(saved);
-    return saved;
-  }, [form, edits, localImages, projectId, formId, storageKey, formStorageKey, customerParticipants, workerParticipants]);
-
-  const handleSave = useCallback(async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    setHeader?.({ saving: true });
-    try {
-      await doSave();
-    } catch (err: any) {
-      console.error("Save failed:", err);
-      alert(err.message || "Failed to save form");
-    } finally {
-      setHeader?.({ saving: false });
-    }
-  }, [doSave, setHeader]);
-
-  const handlePdfGenerate = useCallback(async () => {
-    await handleSave();
-    setHeader?.({ generating: true });
-    setGenerateError(null);
-
-    try {
-      const res = await fetch(`/api/public/projects/${projectId}/forms/${formId}/pdf`,
-        { method: "GET" }
-      );
-      if (!res.ok) {
-        setGenerateError("Failed to fetch form");
-        throw new Error("Failed to generate PDF");
-      }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `form-${formId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      window.URL.revokeObjectURL(url);
-
-    } catch (err: any) {
-      console.error(err);
-      setGenerateError(err.message || "Failed to generate PDF");
-    } finally {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-      setHeader?.({ generating: false, saving: false });
-    }
-  }, [projectId, formId]);
-
-  const handleDeleteForm = useCallback(async () => {
-    if (!projectId || !formId || !canDeleteForm) return;
-
-    setDeletingForm(true);
-
-    if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current);
-      autoSaveTimerRef.current = null;
-    }
-
-    try {
-      const res = await fetch(`/api/public/projects/${projectId}/forms/${formId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const body = await res.text();
-        throw new Error(`Server returned ${res.status}: ${body}`);
-      }
-
-      localStorage.removeItem(storageKey);
-      localStorage.removeItem(formStorageKey);
-      router.push(`/projects/${projectId}`);
-    } catch (err: any) {
-      console.error("Delete form failed:", err);
-      alert(err.message || "Failed to delete form");
-      setDeletingForm(false);
-    }
-  }, [projectId, formId, storageKey, formStorageKey, router, canDeleteForm]);
-
-  //Use effect to set header buttons
-  useEffect(() => {
-    setHeader?.({
-      showSave: true,
-      onSave: handleSave,
-      showGenerate: true,
-      onGeneratePdf: handlePdfGenerate,
-    });
-
-    return () => {
-      setHeader?.({
-        showSave: false,
-        showGenerate: false,
-        onSave: undefined,
-        onGeneratePdf: undefined,
-      });
-    };
-  }, [setHeader, handleSave, handlePdfGenerate]);
-
-  // --- Autosave to server after inactivity ---
-  useEffect(() => {
-    if (!form || loading || deletingForm) return;
-    if (savingInFlightRef.current) return;
-    if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current);
-    }
-    autoSaveTimerRef.current = window.setTimeout(async () => {
-      savingInFlightRef.current = true;
-      try {
-        await doSave();
-      } catch (err) {
-        console.error("autosave failed", err);
-      } finally {
-        savingInFlightRef.current = false;
-      }
-    }, 180000);
-
-    return () => {
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-        autoSaveTimerRef.current = null;
-      }
-    };
-  }, [edits, form, localImages, loading, doSave, customerParticipants, workerParticipants, deletingForm]);
-
-  // reset saved payload when the form object changes (refetch/delete/save)
-  useEffect(() => {
-    lastSavedPayload.current = null;
-  }, [form]);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-        autoSaveTimerRef.current = null;
-      }
-    };
-  }, []);
-
-
-
+  const params = useParams();
+  const projectId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const formId = Array.isArray(params.formId) ? params.formId[0] : params.formId;
+
+  const {
+    form,
+    edits,
+    localImages,
+    uploadErrors,
+    loading,
+    showDeleteModal,
+    deletingForm,
+    customerParticipants,
+    workerParticipants,
+    canDeleteForm,
+    saveOption,
+    saveComment,
+    saveImage,
+    deleteImage,
+    addRoofSideHandler,
+    handleAddCustomField,
+    handleRemoveCustomField,
+    handleDeleteForm,
+    onRoofSideDeleted,
+    setShowDeleteModal,
+    setCustomerParticipants,
+    setWorkerParticipants,
+  } = useProjectFormPage({ projectId, formId });
 
   if (loading) return (
     <div className="loading-page">
       <Spinner size={48} />
     </div>
-  )
+  );
+
   if (!form) return <p>Inga formulär hittade.</p>;
 
   return (
-      <div className="form-page">
-        <div className="form-page-header">
-          <h1>{form.title}</h1>
-          {canDeleteForm && (
-            <button
-              type="button"
-              className="form-page-delete-btn"
-              onClick={() => setShowDeleteModal(true)}
-              disabled={deletingForm}
-            >
-              {deletingForm ? "Raderar formulär..." : "Radera formulär"}
-            </button>
-          )}
-        </div>
-        <p className="small-text">Skapad: {new Date(form.createdAt).toLocaleDateString("sv-SE")} av {form.ownerName || "okänd"}</p>
-
-        <div className="participants-section">
-          <h4>Deltagare vid besiktning</h4>
-          <label htmlFor="customerParticipants" className="participants-section-label">
-            Kund:
-            <input
-              type="text"
-              id="customerParticipants"
-              value={customerParticipants}
-              onChange={(e) => setCustomerParticipants(e.target.value)}
-            />
-          </label>
-          <label htmlFor="workerParticipants" className="participants-section-label">
-            Underentrepenör:
-            <input 
-              type="text"
-              id="workerParticipants"
-              value={workerParticipants}
-              onChange={(e) => setWorkerParticipants(e.target.value)}
-            />
-          </label>
-        </div>
-
-        <h2>{form.generalSectionTitle}</h2>
-        {form.generalSection?.map((field) => (
-          <FieldItem
-            key={field.fieldId}
-            field={field}
-            edits={edits}
-            localImages={localImages}
-            uploadError={uploadErrors[field.fieldId] || undefined}
-            saveOption={saveOption}
-            saveComment={saveComment}
-            saveImage={saveImage}
-            deleteImage={deleteImage}
-            className="form-page-ul-li"
-          />
-        ))}
-
-        {form.roofSides?.map((side) => (
-          <RoofSideSection
-            key={side.id}
-            roofSide={side}
-            edits={edits}
-            localImages={localImages}
-            uploadErrors={uploadErrors}
-            saveOption={saveOption}
-            saveComment={saveComment}
-            saveImage={saveImage}
-            deleteImage={deleteImage}
-            projectId={projectId as string}
-            formId={formId as string}
-            onAddCustomField={handleAddCustomField}
-            onRemoveCustomField={handleRemoveCustomField}
-            onRoofSideDeleted={(id) => {
-              // prune any cached copy immediately and then refetch
-              const stored = localStorage.getItem(formStorageKey);
-              if (stored) {
-                try {
-                  const parsed: Form = JSON.parse(stored);
-                  parsed.roofSides = parsed.roofSides?.filter((s) => s.id !== id);
-                  localStorage.setItem(formStorageKey, JSON.stringify(parsed));
-                } catch {}
-              }
-              fetchForm();
-            }}
-          />
-        ))}
-
-        <form
-          className="add-roof-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const input = e.currentTarget.elements.namedItem("TakfallInput") as HTMLInputElement;
-            if (!input.value) return;
-            addRoofSideHandler(input.value);
-            input.value = "";
-          }}
-        >
-          <label htmlFor="TakfallInput">Lägg till takfall</label>
-          <input type="text" name="TakfallInput" placeholder="Namnge takfall" />
-          <button type="submit" id="SubmitFormBtn">
-            Lägg till takfall
-          </button>
-        </form>
-
+    <div className="form-page">
+      <div className="form-page-header">
+        <h1>{form.title}</h1>
         {canDeleteForm && (
-          <WarningModal
-            open={showDeleteModal}
-            onClose={() => setShowDeleteModal(false)}
-            onConfirm={handleDeleteForm}
-            title="Radera formulär"
-            message={`Är du säker på att du vill radera formuläret "${form.title}"? Denna åtgärd kan inte ångras.`}
-            confirmText="Radera"
-            cancelText="Avbryt"
-          />
+          <button
+            type="button"
+            className="form-page-delete-btn"
+            onClick={() => setShowDeleteModal(true)}
+            disabled={deletingForm}
+          >
+            {deletingForm ? "Raderar formulär..." : "Radera formulär"}
+          </button>
         )}
       </div>
+
+      <p className="small-text">
+        Skapad: {new Date(form.createdAt).toLocaleDateString("sv-SE")} av {form.ownerName || "okänd"}
+      </p>
+
+      <div className="participants-section">
+        <h4>Deltagare vid besiktning</h4>
+        <label htmlFor="customerParticipants" className="participants-section-label">
+          Kund:
+          <input
+            type="text"
+            id="customerParticipants"
+            value={customerParticipants}
+            onChange={(e) => setCustomerParticipants(e.target.value)}
+          />
+        </label>
+        <label htmlFor="workerParticipants" className="participants-section-label">
+          Underentrepenör:
+          <input
+            type="text"
+            id="workerParticipants"
+            value={workerParticipants}
+            onChange={(e) => setWorkerParticipants(e.target.value)}
+          />
+        </label>
+      </div>
+
+      <h2>{form.generalSectionTitle}</h2>
+      {form.generalSection?.map((field) => (
+        <FieldItem
+          key={field.fieldId}
+          field={field}
+          edits={edits}
+          localImages={localImages}
+          uploadError={uploadErrors[field.fieldId] || undefined}
+          saveOption={saveOption}
+          saveComment={saveComment}
+          saveImage={saveImage}
+          deleteImage={deleteImage}
+          className="form-page-ul-li"
+        />
+      ))}
+
+      {form.roofSides?.map((side) => (
+        <RoofSideSection
+          key={side.id}
+          roofSide={side}
+          edits={edits}
+          localImages={localImages}
+          uploadErrors={uploadErrors}
+          saveOption={saveOption}
+          saveComment={saveComment}
+          saveImage={saveImage}
+          deleteImage={deleteImage}
+          projectId={projectId as string}
+          formId={formId as string}
+          onAddCustomField={handleAddCustomField}
+          onRemoveCustomField={handleRemoveCustomField}
+          onRoofSideDeleted={onRoofSideDeleted}
+        />
+      ))}
+
+      <form
+        className="add-roof-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const input = e.currentTarget.elements.namedItem("TakfallInput") as HTMLInputElement;
+          if (!input.value) return;
+          addRoofSideHandler(input.value);
+          input.value = "";
+        }}
+      >
+        <label htmlFor="TakfallInput">Lägg till takfall</label>
+        <input type="text" name="TakfallInput" placeholder="Namnge takfall" />
+        <button type="submit" id="SubmitFormBtn">
+          Lägg till takfall
+        </button>
+      </form>
+
+      {canDeleteForm && (
+        <WarningModal
+          open={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDeleteForm}
+          title="Radera formulär"
+          message={`Är du säker på att du vill radera formuläret "${form.title}"? Denna åtgärd kan inte ångras.`}
+          confirmText="Radera"
+          cancelText="Avbryt"
+        />
+      )}
+    </div>
   );
 }
