@@ -26,6 +26,7 @@ type Form = {
     ownerName?: string;
     customerParticipants?: string;
     workerParticipants?: string;
+    companyParticipants?: string;
 }
 type FormSection = {
     id: string;
