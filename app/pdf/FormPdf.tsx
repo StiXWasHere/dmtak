@@ -196,6 +196,11 @@ export default function FormPdf({ form }: Props) {
               </Text>
             )}
 
+            {form.companyParticipants && (
+              <Text style={styles.introductionText}>
+                Utförare - {form.companyParticipants}
+              </Text>
+            )}
             <Text style={styles.h2}>
               {form.generalSectionTitle}
             </Text>

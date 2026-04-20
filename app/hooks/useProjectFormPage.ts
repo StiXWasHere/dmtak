@@ -80,6 +80,7 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
   const [deletingForm, setDeletingForm] = useState(false);
   const [customerParticipants, setCustomerParticipants] = useState("");
   const [workerParticipants, setWorkerParticipants] = useState("");
+  const [companyParticipants, setCompanyParticipants] = useState("");
   const [generateError, setGenerateError] = useState<string | null>(null);
 
   const timerRef = useRef<number | null>(null);
@@ -164,6 +165,7 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
       setEdits(initialEdits);
       setCustomerParticipants(data.customerParticipants || "");
       setWorkerParticipants(data.workerParticipants || "");
+      setCompanyParticipants(data.companyParticipants || "");
     } catch (err: any) {
       console.error(err);
       alert(err.message || "Failed to load form");
@@ -437,6 +439,7 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
       roofSides: updatedRoofSides || [],
       customerParticipants: customerParticipants.trim() || undefined,
       workerParticipants: workerParticipants.trim() || undefined,
+      companyParticipants: companyParticipants.trim() || undefined,
     };
 
     const str = JSON.stringify(payload);
@@ -479,6 +482,7 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
     formStorageKey,
     customerParticipants,
     workerParticipants,
+    companyParticipants,
   ]);
 
   const handleSave = useCallback(async (e?: FormEvent) => {
@@ -644,6 +648,7 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
     doSave,
     customerParticipants,
     workerParticipants,
+    companyParticipants,
     deletingForm,
   ]);
 
@@ -674,6 +679,7 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
     deletingForm,
     customerParticipants,
     workerParticipants,
+    companyParticipants,
     canDeleteForm,
     saveOption,
     saveComment,
@@ -687,5 +693,6 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
     setShowDeleteModal,
     setCustomerParticipants,
     setWorkerParticipants,
+    setCompanyParticipants,
   };
 }

@@ -23,6 +23,7 @@ export default function FormPage() {
     deletingForm,
     customerParticipants,
     workerParticipants,
+    companyParticipants,
     canDeleteForm,
     saveOption,
     saveComment,
@@ -36,6 +37,7 @@ export default function FormPage() {
     setShowDeleteModal,
     setCustomerParticipants,
     setWorkerParticipants,
+    setCompanyParticipants,
   } = useProjectFormPage({ projectId, formId });
 
   if (loading) return (
@@ -84,6 +86,15 @@ export default function FormPage() {
             id="workerParticipants"
             value={workerParticipants}
             onChange={(e) => setWorkerParticipants(e.target.value)}
+          />
+        </label>
+        <label htmlFor="companyParticipants" className="participants-section-label">
+          Utförare:
+          <input 
+            type="text" 
+            id="companyParticipants"
+            value={companyParticipants}
+            onChange={(e) => setCompanyParticipants(e.target.value)}
           />
         </label>
       </div>
