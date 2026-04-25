@@ -248,6 +248,28 @@ export const roofSideTemplate: RoofSide = {
           fieldId: "Vindskivor7"
         }
       ]
+    },    
+    {
+      id: "Taklucka",
+      title: "Taklucka",
+      fields: [
+        {
+          title: "Takluckan är monterad fackmässigt och är tät mot taket",
+          fieldId: "taklucka"
+        },
+        {
+          title: "Takluckans gångjärn och infästningar är rätt justerade och rostfria",
+          fieldId: "takluckaGongjarn"
+        },
+        {
+          title: "Takluckan är fri från skador, bucklor och skarpa kanter",
+          fieldId: "takluckaSkick"
+        },
+        {
+          title: "Takluckan är rengjord och arbetsområdet runt den är städat",
+          fieldId: "takluckaStad"
+        }
+      ]
     },
     {
       id: "Takpannor",
@@ -503,6 +525,29 @@ export const roofSideTemplate: RoofSide = {
         }
       ]
     },
+    {
+      id: "Avstadning",
+      title: "Avstädning",
+      fields: [
+        { 
+          title: "Tak är rengjort från material, byggdamm, smuts och kapdamm", 
+          fieldId: "tak" 
+        },
+        { 
+          title: "Ställning är fri från material och verktyg inför nedmontering", 
+          fieldId: "stallning" 
+        },
+        { 
+          title: "Mark är rengjord från material och avfall, och avfallshantering är utförd på ett fackmässigt sätt", 
+          fieldId: "mark" 
+        },
+        { 
+          title: "Vind är rengjord från material, verktyg, byggdamm och avfall", 
+          fieldId: "vind" 
+        }
+      ]
+    },
+
     {
       id: "Ovrig",
       title: "Övriga kommentarer",
