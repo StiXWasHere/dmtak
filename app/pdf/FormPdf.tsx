@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   },
 
   img: {
-    height: 120,
+    height: 180,
     objectFit: "contain",
     borderRadius: 2,
     alignSelf: "flex-start",
@@ -240,16 +240,18 @@ export default function FormPdf({ form }: Props) {
                   : field.imgUrl
                   ? [field.imgUrl]
                   : []).length > 0 && (
-                  <View style={styles.imageGrid}>
-                    {(field.imgUrls && field.imgUrls.length > 0
-                      ? field.imgUrls
-                      : field.imgUrl
-                      ? [field.imgUrl]
-                      : []).map((url, index) => (
-                      <View key={`${field.fieldId}-general-${index}`} style={styles.imageCell}>
-                        <Image src={url} style={styles.img} />
-                      </View>
-                    ))}
+                  <View wrap={false}>
+                    <View style={styles.imageGrid}>
+                      {(field.imgUrls && field.imgUrls.length > 0
+                        ? field.imgUrls
+                        : field.imgUrl
+                        ? [field.imgUrl]
+                        : []).map((url, index) => (
+                        <View key={`${field.fieldId}-general-${index}`} style={styles.imageCell}>
+                          <Image src={url} style={styles.img} />
+                        </View>
+                      ))}
+                    </View>
                   </View>
                 )}
               </View>
@@ -306,16 +308,18 @@ export default function FormPdf({ form }: Props) {
                         : field.imgUrl
                         ? [field.imgUrl]
                         : []).length > 0 && (
-                        <View style={styles.imageGrid}>
-                          {(field.imgUrls && field.imgUrls.length > 0
-                            ? field.imgUrls
-                            : field.imgUrl
-                            ? [field.imgUrl]
-                            : []).map((url, index) => (
-                            <View key={`${field.fieldId}-roof-${index}`} style={styles.imageCell}>
-                              <Image src={url} style={styles.img} />
-                            </View>
-                          ))}
+                        <View wrap={false}>
+                          <View style={styles.imageGrid}>
+                            {(field.imgUrls && field.imgUrls.length > 0
+                              ? field.imgUrls
+                              : field.imgUrl
+                              ? [field.imgUrl]
+                              : []).map((url, index) => (
+                              <View key={`${field.fieldId}-roof-${index}`} style={styles.imageCell}>
+                                <Image src={url} style={styles.img} />
+                              </View>
+                            ))}
+                          </View>
                         </View>
                       )}
                     </View>
