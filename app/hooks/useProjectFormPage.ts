@@ -194,6 +194,11 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
   const saveImage = useCallback(async (fieldId: string, files: File[]) => {
     if (!files.length) return;
 
+    console.log(`[ImageUpload] Starting upload for field: ${fieldId}, files count: ${files.length}`, {
+      fileNames: files.map(f => f.name),
+      fileSizes: files.map(f => f.size),
+    });
+
     setUploadErrors((prev) => ({ ...prev, [fieldId]: null }));
     setLocalImages((prev) => ({
       ...prev,
@@ -204,14 +209,19 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
     let failedUploads = 0;
 
     try {
-      for (const file of files) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        console.log(`[ImageUpload] Uploading file ${i + 1}/${files.length}: ${file.name}`);
+
         const formData = new FormData();
         formData.append("file", file);
 
+        const startTime = Date.now();
         const res = await fetch("/api/public/upload/image", {
           method: "POST",
           body: formData,
         });
+        const duration = Date.now() - startTime;
 
         if (!res.ok) {
           failedUploads += 1;
@@ -233,19 +243,36 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
             }
           }
 
-          console.error("Image upload failed", errorMessage);
+          console.error(`[ImageUpload] Failed to upload ${file.name}: ${errorMessage}`, {
+            fieldId,
+            fileName: file.name,
+            fileSize: file.size,
+            statusCode: res.status,
+            duration: `${duration}ms`,
+          });
           continue;
         }
 
         const { url } = await res.json();
         if (url) {
+          console.log(`[ImageUpload] File ${file.name} uploaded successfully`, {
+            fieldId,
+            fileName: file.name,
+            duration: `${duration}ms`,
+          });
           uploadedUrls.push(url);
         } else {
           failedUploads += 1;
+          console.error(`[ImageUpload] No URL returned for ${file.name}`, { fieldId, fileName: file.name });
         }
       }
 
       if (uploadedUrls.length > 0) {
+        console.log(`[ImageUpload] Successfully uploaded ${uploadedUrls.length} files`, {
+          fieldId,
+          uploadedCount: uploadedUrls.length,
+        });
+
         setEdits((prev) => {
           const prevField = prev[fieldId] || {};
           const existing = prevField.imgUrls || (prevField.imgUrl ? [prevField.imgUrl] : []);
@@ -264,6 +291,13 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
       }
 
       if (failedUploads > 0) {
+        console.warn(`[ImageUpload] Upload completed with ${failedUploads} failures`, {
+          fieldId,
+          totalFiles: files.length,
+          failedCount: failedUploads,
+          successCount: uploadedUrls.length,
+        });
+
         setUploadErrors((prev) => ({
           ...prev,
           [fieldId]:
@@ -272,10 +306,16 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
               : `Kunde inte ladda upp ${failedUploads} av ${files.length} bilder. Försök igen.`,
         }));
       } else {
+        console.log(`[ImageUpload] All files uploaded successfully for field: ${fieldId}`);
         setUploadErrors((prev) => ({ ...prev, [fieldId]: null }));
       }
     } catch (error) {
-      console.error("Image upload failed", error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`[ImageUpload] Unexpected error during upload`, {
+        fieldId,
+        error: errorMsg,
+        fileCount: files.length,
+      });
       setUploadErrors((prev) => ({
         ...prev,
         [fieldId]:
@@ -292,15 +332,32 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
   }, []);
 
   const deleteImage = useCallback(async (fieldId: string, imageUrl: string) => {
-    if (imageUrl) {
-      const res = await fetch("/api/public/upload/image", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: imageUrl }),
-      });
+    console.log(`[ImageDelete] Deleting image from field: ${fieldId}`);
 
-      if (!res.ok) {
-        console.error("Image delete failed");
+    if (imageUrl) {
+      try {
+        const res = await fetch("/api/public/upload/image", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: imageUrl }),
+        });
+
+        if (!res.ok) {
+          console.error(`[ImageDelete] Failed to delete image from server`, {
+            fieldId,
+            statusCode: res.status,
+            url: imageUrl,
+          });
+          return;
+        }
+
+        console.log(`[ImageDelete] Image deleted successfully from server`, { fieldId });
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.error(`[ImageDelete] Error deleting image`, {
+          fieldId,
+          error: errorMsg,
+        });
         return;
       }
     }
