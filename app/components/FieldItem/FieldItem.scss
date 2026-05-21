@@ -1,0 +1,146 @@
+@use "../../styles/variables" as *;
+
+.annotate-mobile-button {
+  margin-left: 0.5rem;
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #333;
+  border-radius: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.image-annotator-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  padding: 1rem;
+  top: 50px;
+}
+
+.image-annotator-dialog {
+  width: min(100%, 90vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+}
+
+.image-annotator-header,
+.image-annotator-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f7f7f7;
+}
+
+.image-annotator-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f0f0f0;
+  border-top: 1px solid #e2e2e2;
+  border-bottom: 1px solid #e2e2e2;
+  flex-wrap: wrap;
+}
+
+.annotator-colors {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.annotator-color-swatch {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.1s, border-color 0.1s;
+}
+
+.annotator-color-swatch--active {
+  border-color: #1d4ed8;
+  transform: scale(1.2);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1d4ed8;
+}
+
+.annotator-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.annotator-tool-btn {
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #111;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.annotator-tool-btn:active {
+  background: #f3f4f6;
+}
+
+.image-annotator-body {
+  padding: 0.75rem;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  max-height: calc(90vh - 200px);
+}
+
+.image-annotator-canvas-wrapper {
+  display: inline-flex;
+  overflow: auto;
+  border: 1px solid #ddd;
+  border-radius: 0.75rem;
+  background: $white;
+  max-width: 100%;
+  max-height: calc(90vh - 200px);
+}
+
+.annotator-close-btn,
+.annotator-cancel-btn,
+.annotator-save-btn,
+#ImgSubmitBtn,
+#ImgAnnotateBtn {
+  border: 1px solid #ccc;
+  background: $white;
+  color: $black;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.annotator-save-btn {
+  background: $red;
+  color: $white;
+  border-color: $red;
+}
+
+.annotator-close-btn,
+.annotator-cancel-btn {
+  background: $white;
+}
+

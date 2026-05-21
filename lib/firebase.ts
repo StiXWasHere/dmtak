@@ -1,5 +1,8 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+} from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -12,7 +15,17 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const app = !getApps().length
+  ? initializeApp(firebaseConfig)
+  : getApp();
 
-export const db = getFirestore(app);
+const firestoreOptions = {
+  ignoreUndefinedProperties: true,
+  ...(typeof window !== "undefined" && {
+    localCache: persistentLocalCache(),
+  }),
+};
+
+export const db = initializeFirestore(app, firestoreOptions);
+
 export const storage = getStorage(app);
