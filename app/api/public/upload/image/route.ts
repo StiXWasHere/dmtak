@@ -33,8 +33,18 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     const startOptimize = Date.now();
-    const optimizedBuffer = await sharp(buffer)
-      .rotate()
+
+    // Detect SVG input to rasterize at higher density
+    const isSvg = file.type === "image/svg+xml" || buffer.slice(0, 128).toString("utf8").trim().startsWith("<svg");
+
+    // SVG needs density setting for rasterization; regular images use defaults
+    const sharpInstance = isSvg ? sharp(buffer, { density: 300 }) : sharp(buffer);
+
+    // Apply EXIF auto-rotation only for real photos; SVGs have no EXIF and the
+    // annotator canvas already renders in the user-visible (corrected) orientation.
+    const pipeline = isSvg ? sharpInstance : sharpInstance.rotate();
+
+    const optimizedBuffer = await pipeline
       .resize({
         width: 1200,
         withoutEnlargement: true,
@@ -49,18 +59,14 @@ export async function POST(req: NextRequest) {
       originalSize: buffer.length,
       optimizedSize: optimizedBuffer.length,
       duration: `${Date.now() - startOptimize}ms`,
+      isSvg,
     });
 
     //Upload buffered image to Cloudinary
     const startUpload = Date.now();
     const result = await new Promise<any>((resolve, reject) => {
       const upload = cloudinary.uploader.upload_stream(
-        { folder: "forms",
-          eager: [
-            { width: 800, quality: 75, fetch_format: "jpg" },
-          ],
-          eager_async: false,
-         },
+        { folder: "forms" },
         (err, res) => {
           if (err) reject(err);
           else resolve(res);

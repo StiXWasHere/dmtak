@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { ReactSketchCanvas, type ReactSketchCanvasRef } from "react-sketch-canvas";
+import Spinner from "@/app/components/LoadingSpinner/LoadingSpinner";
 import "./FieldItem.css";
 
 interface FieldItemProps {
@@ -27,10 +28,13 @@ export const FieldItem = React.memo(({ field, edits, localImages, uploadError, s
 
   // Local state to buffer comment input
   const [localComment, setLocalComment] = useState(edits[field.fieldId]?.comment || "");
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [showAnnotator, setShowAnnotator] = useState(false);
   const [imageToAnnotate, setImageToAnnotate] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [canvasDims, setCanvasDims] = useState<{ width: number; height: number } | null>(null);
+  const [strokeColor, setStrokeColor] = useState("#e53e3e");
+  const [isSaving, setIsSaving] = useState(false);
   const annotateInputRef = useRef<HTMLInputElement | null>(null);
   const annotatorRef = useRef<ReactSketchCanvasRef | null>(null);
   
@@ -40,26 +44,53 @@ export const FieldItem = React.memo(({ field, edits, localImages, uploadError, s
   }, [edits, field.fieldId]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const touchMedia = window.matchMedia("(pointer: coarse)");
-    const isTouch =
-      navigator.maxTouchPoints > 0 ||
-      touchMedia.matches ||
-      /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    setIsTouchDevice(isTouch);
-  }, []);
-
-  useEffect(() => {
     if (!imageToAnnotate) {
       setImagePreviewUrl(null);
+      setImageDimensions(null);
+      setCanvasDims(null);
       return;
     }
 
-    const url = URL.createObjectURL(imageToAnnotate);
-    setImagePreviewUrl(url);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+
+      const img = new Image();
+      img.onload = () => {
+        const native = { width: img.naturalWidth, height: img.naturalHeight };
+        setImageDimensions(native);
+
+        // Bake EXIF rotation into the pixel data. Browsers apply EXIF orientation
+        // when rendering an <img>, but SVG rasterizers (librsvg/sharp) do not read
+        // EXIF from embedded images, so without this the photo would appear rotated
+        // in the exported SVG. Drawing through a canvas produces an orientation-
+        // corrected JPEG with no rotation tag.
+        const offscreen = document.createElement("canvas");
+        offscreen.width = native.width;
+        offscreen.height = native.height;
+        const ctx = offscreen.getContext("2d");
+        const correctedUrl = ctx
+          ? (ctx.drawImage(img, 0, 0), offscreen.toDataURL("image/jpeg", 0.92))
+          : dataUrl;
+        setImagePreviewUrl(correctedUrl);
+
+        // Scale the canvas to fit the modal while preserving the native aspect ratio.
+        // Leave ~200px for the modal header + footer.
+        const maxW = Math.min(window.innerWidth * 0.85, 900);
+        const maxH = window.innerHeight * 0.6;
+        const scale = Math.min(maxW / native.width, maxH / native.height, 1);
+        setCanvasDims({
+          width: Math.round(native.width * scale),
+          height: Math.round(native.height * scale),
+        });
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(imageToAnnotate);
 
     return () => {
-      URL.revokeObjectURL(url);
+      setImageDimensions(null);
+      setCanvasDims(null);
     };
   }, [imageToAnnotate]);
 
@@ -76,6 +107,21 @@ export const FieldItem = React.memo(({ field, edits, localImages, uploadError, s
     e.target.value = "";
   };
 
+  const dataUrlToBlob = (dataUrl: string) => {
+    const [header, base64] = dataUrl.split(",");
+    const mimeMatch = header.match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : "image/png";
+    const binary = atob(base64);
+    const length = binary.length;
+    const array = new Uint8Array(length);
+
+    for (let i = 0; i < length; i += 1) {
+      array[i] = binary.charCodeAt(i);
+    }
+
+    return new Blob([array], { type: mime });
+  };
+
   const handleAnnotatorSave = async () => {
     if (!annotatorRef.current || !imageToAnnotate) {
       setShowAnnotator(false);
@@ -83,24 +129,38 @@ export const FieldItem = React.memo(({ field, edits, localImages, uploadError, s
       return;
     }
 
+    setIsSaving(true);
     try {
-      const dataUrl = await annotatorRef.current.exportImage("png");
-      const blob = await fetch(dataUrl).then((res) => res.blob());
-      const annotatedFile = new File([blob], `annotated-${imageToAnnotate.name}`, {
-        type: "image/png",
+      // Export as SVG and send SVG to server for rasterization to preserve quality
+      const svg = await annotatorRef.current.exportSvg();
+      const svgBlob = new Blob([svg], { type: "image/svg+xml" });
+      const annotatedFile = new File([svgBlob], `annotated-${imageToAnnotate.name.replace(/\.[^.]+$/, ".svg")}`, {
+        type: "image/svg+xml",
       });
+
+      console.log("[ImageAnnotator] Exported annotated SVG", {
+        originalName: imageToAnnotate.name,
+        annotatedName: annotatedFile.name,
+        annotatedType: annotatedFile.type,
+        annotatedSize: annotatedFile.size,
+        svgPreview: svg.slice(0, 200),
+      });
+
       await saveImage(field.fieldId, [annotatedFile]);
     } catch (error) {
       console.error("[ImageAnnotator] Failed to save annotated image", error);
     } finally {
+      setIsSaving(false);
       setShowAnnotator(false);
       setImageToAnnotate(null);
+      setStrokeColor("#e53e3e");
     }
   };
 
   const handleAnnotatorCancel = () => {
     setShowAnnotator(false);
     setImageToAnnotate(null);
+    setStrokeColor("#e53e3e");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -176,24 +236,10 @@ export const FieldItem = React.memo(({ field, edits, localImages, uploadError, s
         <button
           type="button"
           id="ImgSubmitBtn"
-          onClick={() => {
-            const el = document.getElementById(`file-${field.fieldId}`) as HTMLInputElement;
-            el?.click();
-          }}
+          onClick={openAnnotatePicker}
         >
           +
         </button>
-
-        {isTouchDevice && (
-          <button
-            type="button"
-            id="ImgAnnotateBtn"
-            className="annotate-mobile-button"
-            onClick={openAnnotatePicker}
-          >
-            ✎
-          </button>
-        )}
 
         {imageUrls.map((url, index) => (
           <div className="field-image-wrapper" key={`${field.fieldId}-${index}-${url}`}>
@@ -216,33 +262,61 @@ export const FieldItem = React.memo(({ field, edits, localImages, uploadError, s
 
         {showAnnotator && imagePreviewUrl && (
           <div className="image-annotator-modal" role="dialog" aria-modal="true">
-            <div className="image-annotator-dialog">
+            <div className="image-annotator-dialog" style={{ position: "relative" }}>
+              {isSaving && (
+                <div className="annotator-saving-overlay">
+                  <Spinner size={40} />
+                  <span className="annotator-saving-label">Laddar upp...</span>
+                </div>
+              )}
               <div className="image-annotator-header">
                 <strong>Rita på bilden</strong>
                 <button type="button" className="annotator-close-btn" onClick={handleAnnotatorCancel}>
                   Stäng
                 </button>
               </div>
+              <div className="image-annotator-toolbar">
+                <div className="annotator-colors">
+                  {["#e53e3e", "#000000", "#1d4ed8", "#16a34a", "#f59e0b", "#ffffff"].map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={`annotator-color-swatch${strokeColor === color ? " annotator-color-swatch--active" : ""}`}
+                      style={{ background: color }}
+                      onClick={() => setStrokeColor(color)}
+                      aria-label={color}
+                    />
+                  ))}
+                </div>
+                <div className="annotator-actions">
+                  <button type="button" className="annotator-tool-btn" onClick={() => annotatorRef.current?.undo()}>
+                    Ångra
+                  </button>
+                  <button type="button" className="annotator-tool-btn" onClick={() => annotatorRef.current?.clearCanvas()}>
+                    Rensa
+                  </button>
+                </div>
+              </div>
               <div className="image-annotator-body">
                 <div className="image-annotator-canvas-wrapper">
                   <ReactSketchCanvas
                     ref={annotatorRef}
-                    width="100%"
-                    height="100%"
+                    width={canvasDims ? `${canvasDims.width}px` : "100%"}
+                    height={canvasDims ? `${canvasDims.height}px` : "100%"}
                     strokeWidth={4}
-                    strokeColor="red"
-                    backgroundImage={imagePreviewUrl}
+                    strokeColor={strokeColor}
+                    backgroundImage={imagePreviewUrl ?? undefined}
                     exportWithBackgroundImage={true}
-                    preserveBackgroundImageAspectRatio="xMidYMid slice"
-                    style={{ touchAction: "none", width: "100%", height: "100%" }}
+                    preserveBackgroundImageAspectRatio="none"
+                    style={{ touchAction: "none", display: "block" }}
                   />
                 </div>
               </div>
               <div className="image-annotator-footer">
-                <button type="button" className="annotator-cancel-btn" onClick={handleAnnotatorCancel}>
+                <button type="button" className="annotator-cancel-btn" onClick={handleAnnotatorCancel} disabled={isSaving}>
                   Avbryt
                 </button>
-                <button type="button" className="annotator-save-btn" onClick={handleAnnotatorSave}>
+                <button type="button" className="annotator-save-btn" onClick={handleAnnotatorSave} disabled={isSaving}>
                   Spara och ladda upp
                 </button>
               </div>

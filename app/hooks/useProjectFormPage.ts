@@ -223,6 +223,12 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
         });
         const duration = Date.now() - startTime;
 
+        console.log("[ImageUpload] Upload response headers", {
+          status: res.status,
+          statusText: res.statusText,
+          contentType: res.headers.get("content-type"),
+        });
+
         if (!res.ok) {
           failedUploads += 1;
           let errorMessage = "Bilduppladdning misslyckades";
@@ -253,12 +259,15 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
           continue;
         }
 
-        const { url } = await res.json();
+        const responseData = await res.json();
+        console.log("[ImageUpload] Upload response body", responseData);
+        const { url } = responseData;
         if (url) {
           console.log(`[ImageUpload] File ${file.name} uploaded successfully`, {
             fieldId,
             fileName: file.name,
             duration: `${duration}ms`,
+            url,
           });
           uploadedUrls.push(url);
         } else {
