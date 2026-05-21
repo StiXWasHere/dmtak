@@ -40,7 +40,7 @@ type FormField = {
     selected?: string;
     comment?: string;
     imgUrls?: string[];
-    imgUrl?: string;
+    imgUrl?: string; // for backward compatibility with old fields that only have one image
     _isCustom?: boolean;
 }
 type RoofSide = {
@@ -74,9 +74,9 @@ type FormEdits = {
   [fieldId: string]: {
     selected: string;
     comment: string;
-        imgUrls?: string[];
-    imgUrl?: string;
-        imageTouched?: boolean;
+    imgUrls?: string[];
+    imgUrl?: string; // for backward compatibility with old fields that only have one image
+    imageTouched?: boolean;
   };
 };
 

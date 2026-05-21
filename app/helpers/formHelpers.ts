@@ -36,18 +36,11 @@ export const createCustomField = (title: string): FormField => ({
   selected: "",
   comment: "",
   imgUrls: [],
-  imgUrl: "",
   _isCustom: true,
 });
 
-function normalizeImageUrls(field: { imgUrls?: string[]; imgUrl?: string }) {
-  if (Array.isArray(field.imgUrls) && field.imgUrls.length > 0) {
-    return field.imgUrls;
-  }
-  if (field.imgUrl) {
-    return [field.imgUrl];
-  }
-  return [];
+function normalizeImageUrls(field: { imgUrls?: string[] }) {
+  return Array.isArray(field.imgUrls) && field.imgUrls.length > 0 ? field.imgUrls : [];
 }
 
 // Merge a field with current edits and local image reference
@@ -57,28 +50,20 @@ export function mergeFieldForSave(
     selected?: string;
     comment?: string;
     imgUrls?: string[];
-    imgUrl?: string;
     imageTouched?: boolean;
   } | undefined,
   localImagesMap: { [fieldId: string]: File[] }
 ): FormFieldWithLocalImage {
   const merged: FormFieldWithLocalImage = { ...field };
   const imageUrls = editsForField?.imageTouched
-    ? Array.isArray(editsForField.imgUrls)
-      ? editsForField.imgUrls
-      : editsForField.imgUrl
-      ? [editsForField.imgUrl]
-      : []
+    ? (editsForField.imgUrls ?? [])
     : editsForField?.imgUrls && editsForField.imgUrls.length > 0
     ? editsForField.imgUrls
-    : editsForField?.imgUrl
-    ? [editsForField.imgUrl]
     : normalizeImageUrls(field);
 
   merged.selected = editsForField?.selected ?? field.selected ?? "";
   merged.comment = editsForField?.comment ?? field.comment ?? "";
   merged.imgUrls = imageUrls;
-  merged.imgUrl = imageUrls[0] ?? "";
   merged._hasLocalImage = (localImagesMap[field.fieldId]?.length ?? 0) > 0;
   return merged;
 }

@@ -54,15 +54,12 @@ const mergeRoofSideWithSavedStructure = (serverSide: RoofSide, localSide: RoofSi
 
 const getImageUrls = (savedField: any, field: FormField): string[] => {
   if (savedField?.imageTouched) {
-    if (Array.isArray(savedField?.imgUrls)) return savedField.imgUrls;
-    if (savedField?.imgUrl) return [savedField.imgUrl];
-    return [];
+    return Array.isArray(savedField?.imgUrls) ? savedField.imgUrls : [];
   }
-
   if (Array.isArray(savedField?.imgUrls) && savedField.imgUrls.length > 0) return savedField.imgUrls;
-  if (savedField?.imgUrl) return [savedField.imgUrl];
   if (Array.isArray(field.imgUrls) && field.imgUrls.length > 0) return field.imgUrls;
-  if (field.imgUrl) return [field.imgUrl];
+  // Legacy: migrate single imgUrl string to array on first load
+  if ((field as any).imgUrl) return [(field as any).imgUrl as string];
   return [];
 };
 
@@ -142,7 +139,6 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
           selected: saved[f.fieldId]?.selected || f.selected || "",
           comment: saved[f.fieldId]?.comment || f.comment || "",
           imgUrls: imageUrls,
-          imgUrl: imageUrls[0] || "",
           imageTouched: saved[f.fieldId]?.imageTouched === true,
         };
       });
@@ -155,7 +151,6 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
               selected: saved[f.fieldId]?.selected || f.selected || "",
               comment: saved[f.fieldId]?.comment || f.comment || "",
               imgUrls: imageUrls,
-              imgUrl: imageUrls[0] || "",
               imageTouched: saved[f.fieldId]?.imageTouched === true,
             };
           })
@@ -231,7 +226,12 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
 
         if (!res.ok) {
           failedUploads += 1;
-          let errorMessage = "Bilduppladdning misslyckades";
+          let errorMessage =
+            res.status === 413
+              ? "Bilden är för stor för att laddas upp. Prova en mindre bild."
+              : res.status >= 500
+              ? "Serverfel vid uppladdning. Försök igen om en stund."
+              : "Bilduppladdning misslyckades";
 
           try {
             const data = await res.json();
@@ -241,11 +241,9 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
           } catch {
             try {
               const text = await res.text();
-              if (text.trim()) {
-                errorMessage = text;
-              }
+              if (text.trim()) errorMessage = text;
             } catch {
-              // Keep the default error message.
+              // keep default
             }
           }
 
@@ -284,17 +282,10 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
 
         setEdits((prev) => {
           const prevField = prev[fieldId] || {};
-          const existing = prevField.imgUrls || (prevField.imgUrl ? [prevField.imgUrl] : []);
-          const nextUrls = [...existing, ...uploadedUrls];
-
+          const nextUrls = [...(prevField.imgUrls ?? []), ...uploadedUrls];
           return {
             ...prev,
-            [fieldId]: {
-              ...prevField,
-              imgUrls: nextUrls,
-              imgUrl: nextUrls[0] || "",
-              imageTouched: true,
-            },
+            [fieldId]: { ...prevField, imgUrls: nextUrls, imageTouched: true },
           };
         });
       }
@@ -311,8 +302,8 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
           ...prev,
           [fieldId]:
             failedUploads === files.length
-              ? "Kunde inte ladda upp bilden. Försök igen."
-              : `Kunde inte ladda upp ${failedUploads} av ${files.length} bilder. Försök igen.`,
+              ? "Kunde inte ladda upp bilden. Kontrollera uppkopplingen och försök igen."
+              : `Kunde inte ladda upp ${failedUploads} av ${files.length} bilder. Kontrollera uppkopplingen och försök igen.`,
         }));
       } else {
         console.log(`[ImageUpload] All files uploaded successfully for field: ${fieldId}`);
@@ -320,6 +311,7 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
+      const isNetworkError = error instanceof TypeError && (errorMsg.includes("fetch") || errorMsg.includes("network") || errorMsg.includes("Failed"));
       console.error(`[ImageUpload] Unexpected error during upload`, {
         fieldId,
         error: errorMsg,
@@ -327,10 +319,11 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
       });
       setUploadErrors((prev) => ({
         ...prev,
-        [fieldId]:
-          files.length === 1
-            ? "Kunde inte ladda upp bilden. Försök igen."
-            : `Kunde inte ladda upp ${files.length} bilder. Försök igen.`,
+        [fieldId]: isNetworkError
+          ? "Ingen anslutning till servern. Kontrollera uppkopplingen och försök igen."
+          : files.length === 1
+          ? "Kunde inte ladda upp bilden. Försök igen."
+          : `Kunde inte ladda upp ${files.length} bilder. Försök igen.`,
       }));
     } finally {
       setLocalImages((prev) => ({
@@ -373,17 +366,10 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
 
     setEdits((prev) => {
       const prevField = prev[fieldId] || {};
-      const existing = prevField.imgUrls || (prevField.imgUrl ? [prevField.imgUrl] : []);
-      const nextUrls = existing.filter((url) => url !== imageUrl);
-
+      const nextUrls = (prevField.imgUrls ?? []).filter((url) => url !== imageUrl);
       return {
         ...prev,
-        [fieldId]: {
-          ...prevField,
-          imgUrls: nextUrls,
-          imgUrl: nextUrls[0] || "",
-          imageTouched: true,
-        },
+        [fieldId]: { ...prevField, imgUrls: nextUrls, imageTouched: true },
       };
     });
 
@@ -408,7 +394,6 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
           selected: "",
           comment: "",
           imgUrls: [],
-          imgUrl: "",
           imageTouched: false,
         };
       })
@@ -450,7 +435,6 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
         selected: "",
         comment: "",
         imgUrls: [],
-        imgUrl: "",
         imageTouched: false,
       },
     }));

@@ -53,12 +53,7 @@ function collectFormImageUrls(form: Form) {
 
   if (Array.isArray(form.generalSection)) {
     form.generalSection.forEach((field) => {
-      if (Array.isArray(field.imgUrls)) {
-        field.imgUrls.forEach((url) => {
-          if (url) imageUrls.add(url);
-        });
-      }
-      if (field.imgUrl) imageUrls.add(field.imgUrl);
+      field.imgUrls?.forEach((url) => { if (url) imageUrls.add(url); });
     });
   }
 
@@ -66,12 +61,7 @@ function collectFormImageUrls(form: Form) {
     form.roofSides.forEach((side) => {
       side.sections?.forEach((section) => {
         section.fields?.forEach((field) => {
-          if (Array.isArray(field.imgUrls)) {
-            field.imgUrls.forEach((url) => {
-              if (url) imageUrls.add(url);
-            });
-          }
-          if (field.imgUrl) imageUrls.add(field.imgUrl);
+          field.imgUrls?.forEach((url) => { if (url) imageUrls.add(url); });
         });
       });
     });

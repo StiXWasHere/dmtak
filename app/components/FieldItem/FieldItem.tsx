@@ -35,6 +35,7 @@ export const FieldItem = React.memo(({ field, edits, localImages, uploadError, s
   const [canvasDims, setCanvasDims] = useState<{ width: number; height: number } | null>(null);
   const [strokeColor, setStrokeColor] = useState("#e53e3e");
   const [isSaving, setIsSaving] = useState(false);
+  const [annotatorError, setAnnotatorError] = useState<string | null>(null);
   const annotateInputRef = useRef<HTMLInputElement | null>(null);
   const annotatorRef = useRef<ReactSketchCanvasRef | null>(null);
   
@@ -65,12 +66,23 @@ export const FieldItem = React.memo(({ field, edits, localImages, uploadError, s
         // EXIF from embedded images, so without this the photo would appear rotated
         // in the exported SVG. Drawing through a canvas produces an orientation-
         // corrected JPEG with no rotation tag.
+        //
+        // Cap at 1600 px on the longest side: the server outputs at most 1200 px
+        // wide, so anything beyond 1600 px buys no quality but inflates the
+        // embedded data URL from ~7 MB to ~350 KB, preventing OOM crashes and
+        // request-size failures on low-memory mobile devices.
+        const MAX_EMBED_PX = 1600;
+        const longest = Math.max(native.width, native.height);
+        const embedScale = longest > MAX_EMBED_PX ? MAX_EMBED_PX / longest : 1;
+        const embedW = Math.round(native.width * embedScale);
+        const embedH = Math.round(native.height * embedScale);
+
         const offscreen = document.createElement("canvas");
-        offscreen.width = native.width;
-        offscreen.height = native.height;
+        offscreen.width = embedW;
+        offscreen.height = embedH;
         const ctx = offscreen.getContext("2d");
         const correctedUrl = ctx
-          ? (ctx.drawImage(img, 0, 0), offscreen.toDataURL("image/jpeg", 0.92))
+          ? (ctx.drawImage(img, 0, 0, embedW, embedH), offscreen.toDataURL("image/jpeg", 0.92))
           : dataUrl;
         setImagePreviewUrl(correctedUrl);
 
@@ -107,21 +119,6 @@ export const FieldItem = React.memo(({ field, edits, localImages, uploadError, s
     e.target.value = "";
   };
 
-  const dataUrlToBlob = (dataUrl: string) => {
-    const [header, base64] = dataUrl.split(",");
-    const mimeMatch = header.match(/:(.*?);/);
-    const mime = mimeMatch ? mimeMatch[1] : "image/png";
-    const binary = atob(base64);
-    const length = binary.length;
-    const array = new Uint8Array(length);
-
-    for (let i = 0; i < length; i += 1) {
-      array[i] = binary.charCodeAt(i);
-    }
-
-    return new Blob([array], { type: mime });
-  };
-
   const handleAnnotatorSave = async () => {
     if (!annotatorRef.current || !imageToAnnotate) {
       setShowAnnotator(false);
@@ -130,6 +127,8 @@ export const FieldItem = React.memo(({ field, edits, localImages, uploadError, s
     }
 
     setIsSaving(true);
+    setAnnotatorError(null);
+    let succeeded = false;
     try {
       // Export as SVG and send SVG to server for rasterization to preserve quality
       const svg = await annotatorRef.current.exportSvg();
@@ -147,13 +146,17 @@ export const FieldItem = React.memo(({ field, edits, localImages, uploadError, s
       });
 
       await saveImage(field.fieldId, [annotatedFile]);
+      succeeded = true;
     } catch (error) {
       console.error("[ImageAnnotator] Failed to save annotated image", error);
+      setAnnotatorError("Kunde inte förbereda bilden för uppladdning. Försök igen.");
     } finally {
       setIsSaving(false);
-      setShowAnnotator(false);
-      setImageToAnnotate(null);
-      setStrokeColor("#e53e3e");
+      if (succeeded) {
+        setShowAnnotator(false);
+        setImageToAnnotate(null);
+        setStrokeColor("#e53e3e");
+      }
     }
   };
 
@@ -161,6 +164,7 @@ export const FieldItem = React.memo(({ field, edits, localImages, uploadError, s
     setShowAnnotator(false);
     setImageToAnnotate(null);
     setStrokeColor("#e53e3e");
+    setAnnotatorError(null);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -313,12 +317,17 @@ export const FieldItem = React.memo(({ field, edits, localImages, uploadError, s
                 </div>
               </div>
               <div className="image-annotator-footer">
-                <button type="button" className="annotator-cancel-btn" onClick={handleAnnotatorCancel} disabled={isSaving}>
-                  Avbryt
-                </button>
-                <button type="button" className="annotator-save-btn" onClick={handleAnnotatorSave} disabled={isSaving}>
-                  Spara och ladda upp
-                </button>
+                {annotatorError && (
+                  <p className="annotator-error" role="alert">{annotatorError}</p>
+                )}
+                <div className="annotator-footer-buttons">
+                  <button type="button" className="annotator-cancel-btn" onClick={handleAnnotatorCancel} disabled={isSaving}>
+                    Avbryt
+                  </button>
+                  <button type="button" className="annotator-save-btn" onClick={handleAnnotatorSave} disabled={isSaving}>
+                    Spara och ladda upp
+                  </button>
+                </div>
               </div>
             </div>
           </div>

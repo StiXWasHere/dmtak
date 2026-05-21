@@ -71,7 +71,6 @@ export async function POST(req: NextRequest) {
       options: ['Godkänt', 'Ej godkänt', 'Ej aktuellt', 'Avhjälpt', 'Ej utförd'],
       comment: '',
       imgUrls: [],
-      imgUrl: ''
     })),
     ...(trimmedCustomerParticipants
       ? { customerParticipants: trimmedCustomerParticipants }
