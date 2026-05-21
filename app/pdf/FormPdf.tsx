@@ -235,18 +235,10 @@ export default function FormPdf({ form }: Props) {
                   <Text>Kommentar: {field.comment}</Text>
                 )}
 
-                {(field.imgUrls && field.imgUrls.length > 0
-                  ? field.imgUrls
-                  : field.imgUrl
-                  ? [field.imgUrl]
-                  : []).length > 0 && (
+                {field.imgUrls && field.imgUrls.length > 0 && (
                   <View wrap={false}>
                     <View style={styles.imageGrid}>
-                      {(field.imgUrls && field.imgUrls.length > 0
-                        ? field.imgUrls
-                        : field.imgUrl
-                        ? [field.imgUrl]
-                        : []).map((url, index) => (
+                      {field.imgUrls.map((url, index) => (
                         <View key={`${field.fieldId}-general-${index}`} style={styles.imageCell}>
                           <Image src={url} style={styles.img} />
                         </View>
@@ -303,18 +295,10 @@ export default function FormPdf({ form }: Props) {
                         <Text>Kommentar: {field.comment}</Text>
                       )}
 
-                      {(field.imgUrls && field.imgUrls.length > 0
-                        ? field.imgUrls
-                        : field.imgUrl
-                        ? [field.imgUrl]
-                        : []).length > 0 && (
+                      {field.imgUrls && field.imgUrls.length > 0 && (
                         <View wrap={false}>
                           <View style={styles.imageGrid}>
-                            {(field.imgUrls && field.imgUrls.length > 0
-                              ? field.imgUrls
-                              : field.imgUrl
-                              ? [field.imgUrl]
-                              : []).map((url, index) => (
+                            {field.imgUrls.map((url, index) => (
                               <View key={`${field.fieldId}-roof-${index}`} style={styles.imageCell}>
                                 <Image src={url} style={styles.img} />
                               </View>

@@ -83,11 +83,8 @@ export async function DELETE(
         const imageUrls = new Set<string>();
         if (Array.isArray(data.generalSection)) {
           data.generalSection.forEach((field: any) => {
-            if (Array.isArray(field?.imgUrls)) {
-              field.imgUrls.forEach((url: string) => {
-                if (url) imageUrls.add(url);
-              });
-            }
+            field?.imgUrls?.forEach((url: string) => { if (url) imageUrls.add(url); });
+            // Legacy: migrate single imgUrl string saved before schema cleanup
             if (field?.imgUrl) imageUrls.add(field.imgUrl);
           });
         }
@@ -95,11 +92,7 @@ export async function DELETE(
           data.roofSides.forEach((side: any) => {
             side.sections?.forEach((section: any) => {
               section.fields?.forEach((field: any) => {
-                if (Array.isArray(field?.imgUrls)) {
-                  field.imgUrls.forEach((url: string) => {
-                    if (url) imageUrls.add(url);
-                  });
-                }
+                field?.imgUrls?.forEach((url: string) => { if (url) imageUrls.add(url); });
                 if (field?.imgUrl) imageUrls.add(field.imgUrl);
               });
             });
