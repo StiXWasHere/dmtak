@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\FabianNilsson-Teknis\\\\OneDrive - DMTAK\\\\Dokument\\\\GitHub\\\\dmtak\")",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\FabianNilsson-Teknis\\\\OneDrive - DMTAK\\\\Dokument\\\\GitHub\\\\dmtak\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(grep -r \"disabled\\\\|Disabled\\\\|DISABLED\\\\|commented\\\\|Commented\\\\|//\" \"c:/Users/FabianNilsson-Teknis/OneDrive - DMTAK/Dokument/GitHub/dmtak/app\" --include=\"*.ts\" --include=\"*.tsx\")"
+    ]
+  }
+}
