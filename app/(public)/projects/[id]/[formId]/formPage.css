@@ -107,7 +107,8 @@
   flex-direction: column;
   gap: 1rem;
 }
-.roof-side .roof-section {
+
+.roof-section {
   display: flex;
   flex-direction: column;
   gap: 2rem;

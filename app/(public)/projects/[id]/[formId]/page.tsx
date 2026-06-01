@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useState, useRef } from "react";
 import { FieldItem } from "@/app/components/FieldItem/FieldItem";
 import { RoofSideSection } from "@/app/components/RoofSideSection/RoofSideSection";
 import "./formPage.css";
@@ -39,6 +40,24 @@ export default function FormPage() {
     setWorkerParticipants,
     setCompanyParticipants,
   } = useProjectFormPage({ projectId, formId });
+
+  const [openSectionId, setOpenSectionId] = useState<string | null>(null);
+  const generalSectionRef = useRef<HTMLDivElement | null>(null);
+
+  const handleGeneralSectionToggle = () => {
+    if (openSectionId !== "general") {
+      setOpenSectionId("general");
+      setTimeout(() => {
+        if (generalSectionRef.current) {
+          const offset = 40;
+          const top = generalSectionRef.current.getBoundingClientRect().top + window.scrollY - offset;
+          window.scrollTo({ top, behavior: "smooth" });
+        }
+      }, 100);
+    } else {
+      setOpenSectionId(null);
+    }
+  };
 
   if (loading) return (
     <div className="loading-page">
@@ -99,21 +118,36 @@ export default function FormPage() {
         </label>
       </div>
 
-      <h2>{form.generalSectionTitle}</h2>
-      {form.generalSection?.map((field) => (
-        <FieldItem
-          key={field.fieldId}
-          field={field}
-          edits={edits}
-          localImages={localImages}
-          uploadError={uploadErrors[field.fieldId] || undefined}
-          saveOption={saveOption}
-          saveComment={saveComment}
-          saveImage={saveImage}
-          deleteImage={deleteImage}
-          className="form-page-ul-li"
-        />
-      ))}
+      <div className="roof-section" ref={generalSectionRef}>
+        <button
+          type="button"
+          className="section-toggle"
+          onClick={handleGeneralSectionToggle}
+          aria-expanded={openSectionId === "general"}
+          aria-controls="general-section-body"
+        >
+          <p>{form.generalSectionTitle}</p>
+        </button>
+
+        {openSectionId === "general" && (
+          <div id="general-section-body" className="section-body">
+            {form.generalSection?.map((field) => (
+              <FieldItem
+                key={field.fieldId}
+                field={field}
+                edits={edits}
+                localImages={localImages}
+                uploadError={uploadErrors[field.fieldId] || undefined}
+                saveOption={saveOption}
+                saveComment={saveComment}
+                saveImage={saveImage}
+                deleteImage={deleteImage}
+                className="form-page-ul-li"
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {form.roofSides?.map((side) => (
         <RoofSideSection
@@ -131,6 +165,8 @@ export default function FormPage() {
           onAddCustomField={handleAddCustomField}
           onRemoveCustomField={handleRemoveCustomField}
           onRoofSideDeleted={onRoofSideDeleted}
+          openSectionId={openSectionId}
+          onOpenSection={setOpenSectionId}
         />
       ))}
 
