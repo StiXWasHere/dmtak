@@ -133,6 +133,11 @@
     gap: 2rem;
   }
 .section-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
   padding-inline: 1rem;
   padding-block: .3rem;
   border: none;
@@ -144,6 +149,24 @@
 
   &:hover {
     background-color: $lighten-red;
+  }
+
+  &--partial {
+    background-color: $yellow;
+    color: $white;
+
+    &:hover {
+      background-color: $lighten-yellow;
+    }
+  }
+
+  &--complete {
+    background-color: $green;
+    color: $white;
+
+    &:hover {
+      background-color: $lighten-green;
+    }
   }
 }
 .participants-section {

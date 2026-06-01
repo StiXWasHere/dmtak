@@ -112,6 +112,10 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
       {!hidden && 
         roofSide.sections.map((section) => {
           const isOpen = openSectionId === section.id;
+          const COMPLETED_OPTIONS = new Set(['Godkänt', 'Avhjälpt', 'Ej aktuellt']);
+          const approvedCount = section.fields.filter(f => COMPLETED_OPTIONS.has(edits[f.fieldId]?.selected ?? f.selected ?? '')).length;
+          const totalCount = section.fields.length;
+          const sectionStatus = totalCount > 0 && approvedCount === totalCount ? 'complete' : approvedCount > 0 ? 'partial' : null;
           return (
             <div
               key={section.id}
@@ -120,12 +124,13 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
             >
               <button
                 type="button"
-                className="section-toggle"
+                className={`section-toggle${sectionStatus ? ` section-toggle--${sectionStatus}` : ''}`}
                 onClick={() => handleOpenSection(section.id, isOpen)}
                 aria-expanded={isOpen}
                 aria-controls={`section-body-${section.id}`}
               >
-                <p>{section.title}</p>
+                <span>{section.title}</span>
+                <span>{approvedCount}/{totalCount}</span>
               </button>
 
               {isOpen && (

@@ -67,6 +67,11 @@ export default function FormPage() {
 
   if (!form) return <p>Inga formulär hittade.</p>;
 
+  const COMPLETED_OPTIONS = new Set(['Godkänt', 'Avhjälpt', 'Ej aktuellt']);
+  const generalApproved = form.generalSection?.filter(f => COMPLETED_OPTIONS.has(edits[f.fieldId]?.selected ?? f.selected ?? '')).length ?? 0;
+  const generalTotal = form.generalSection?.length ?? 0;
+  const generalStatus = generalTotal > 0 && generalApproved === generalTotal ? 'complete' : generalApproved > 0 ? 'partial' : null;
+
   return (
     <div className="form-page">
       <div className="form-page-header">
@@ -121,12 +126,13 @@ export default function FormPage() {
       <div className="roof-section" ref={generalSectionRef}>
         <button
           type="button"
-          className="section-toggle"
+          className={`section-toggle${generalStatus ? ` section-toggle--${generalStatus}` : ''}`}
           onClick={handleGeneralSectionToggle}
           aria-expanded={openSectionId === "general"}
           aria-controls="general-section-body"
         >
-          <p>{form.generalSectionTitle}</p>
+          <span>{form.generalSectionTitle}</span>
+          <span>{generalApproved}/{generalTotal}</span>
         </button>
 
         {openSectionId === "general" && (
