@@ -19,6 +19,8 @@ interface RoofSideSectionProps {
   onRoofSideDeleted: (id: string) => void;
   onAddCustomField: (roofSideId: string, sectionId: string, title: string) => void;
   onRemoveCustomField: (roofSideId: string, sectionId: string, fieldId: string) => void;
+  openSectionId: string | null;
+  onOpenSection: (sectionId: string | null) => void;
 }
 
 export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
@@ -35,9 +37,10 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
   onRoofSideDeleted,
   onAddCustomField,
   onRemoveCustomField,
+  openSectionId,
+  onOpenSection,
 }) => {
   const [hidden, setHidden] = useState(false);
-  const [openSectionId, setOpenSectionId] = useState(null as string | null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [customFieldDrafts, setCustomFieldDrafts] = useState<{ [sectionId: string]: string }>({});
@@ -48,7 +51,7 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
   // Helper to handle opening a section and scrolling
   const handleOpenSection = (sectionId: string, isOpen: boolean) => {
     if (!isOpen) {
-      setOpenSectionId(sectionId);
+      onOpenSection(sectionId);
       // Wait for state update and DOM render
       setTimeout(() => {
         const ref = sectionRefs.current[sectionId];
@@ -59,7 +62,7 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
         }
       }, 100);
     } else {
-      setOpenSectionId(null);
+      onOpenSection(null);
     }
   };
 
@@ -109,6 +112,10 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
       {!hidden && 
         roofSide.sections.map((section) => {
           const isOpen = openSectionId === section.id;
+          const COMPLETED_OPTIONS = new Set(['Godkänt', 'Avhjälpt', 'Ej aktuellt']);
+          const approvedCount = section.fields.filter(f => COMPLETED_OPTIONS.has(edits[f.fieldId]?.selected ?? f.selected ?? '')).length;
+          const totalCount = section.fields.length;
+          const sectionStatus = totalCount > 0 && approvedCount === totalCount ? 'complete' : approvedCount > 0 ? 'partial' : null;
           return (
             <div
               key={section.id}
@@ -117,12 +124,13 @@ export const RoofSideSection: React.FC<RoofSideSectionProps> = ({
             >
               <button
                 type="button"
-                className="section-toggle"
+                className={`section-toggle${sectionStatus ? ` section-toggle--${sectionStatus}` : ''}`}
                 onClick={() => handleOpenSection(section.id, isOpen)}
                 aria-expanded={isOpen}
                 aria-controls={`section-body-${section.id}`}
               >
-                <p>{section.title}</p>
+                <span>{section.title}</span>
+                <span>{approvedCount}/{totalCount}</span>
               </button>
 
               {isOpen && (

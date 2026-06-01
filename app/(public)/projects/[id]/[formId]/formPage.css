@@ -107,13 +107,19 @@
   flex-direction: column;
   gap: 1rem;
 }
-.roof-side .roof-section {
+
+.roof-section {
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
 
 .section-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
   padding-inline: 1rem;
   padding-block: 0.3rem;
   border: none;
@@ -125,6 +131,20 @@
 }
 .section-toggle:hover {
   background-color: rgba(220, 4, 43, 0.9);
+}
+.section-toggle--partial {
+  background-color: rgb(248, 191, 2);
+  color: rgb(254, 254, 254);
+}
+.section-toggle--partial:hover {
+  background-color: rgba(248, 191, 2, 0.9);
+}
+.section-toggle--complete {
+  background-color: rgb(8, 221, 8);
+  color: rgb(254, 254, 254);
+}
+.section-toggle--complete:hover {
+  background-color: rgba(8, 221, 8, 0.9);
 }
 
 .participants-section {

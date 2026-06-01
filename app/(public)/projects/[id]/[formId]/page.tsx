@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useState, useRef } from "react";
 import { FieldItem } from "@/app/components/FieldItem/FieldItem";
 import { RoofSideSection } from "@/app/components/RoofSideSection/RoofSideSection";
 import "./formPage.css";
@@ -40,6 +41,24 @@ export default function FormPage() {
     setCompanyParticipants,
   } = useProjectFormPage({ projectId, formId });
 
+  const [openSectionId, setOpenSectionId] = useState<string | null>(null);
+  const generalSectionRef = useRef<HTMLDivElement | null>(null);
+
+  const handleGeneralSectionToggle = () => {
+    if (openSectionId !== "general") {
+      setOpenSectionId("general");
+      setTimeout(() => {
+        if (generalSectionRef.current) {
+          const offset = 40;
+          const top = generalSectionRef.current.getBoundingClientRect().top + window.scrollY - offset;
+          window.scrollTo({ top, behavior: "smooth" });
+        }
+      }, 100);
+    } else {
+      setOpenSectionId(null);
+    }
+  };
+
   if (loading) return (
     <div className="loading-page">
       <Spinner size={48} />
@@ -47,6 +66,11 @@ export default function FormPage() {
   );
 
   if (!form) return <p>Inga formulär hittade.</p>;
+
+  const COMPLETED_OPTIONS = new Set(['Godkänt', 'Avhjälpt', 'Ej aktuellt']);
+  const generalApproved = form.generalSection?.filter(f => COMPLETED_OPTIONS.has(edits[f.fieldId]?.selected ?? f.selected ?? '')).length ?? 0;
+  const generalTotal = form.generalSection?.length ?? 0;
+  const generalStatus = generalTotal > 0 && generalApproved === generalTotal ? 'complete' : generalApproved > 0 ? 'partial' : null;
 
   return (
     <div className="form-page">
@@ -99,21 +123,37 @@ export default function FormPage() {
         </label>
       </div>
 
-      <h2>{form.generalSectionTitle}</h2>
-      {form.generalSection?.map((field) => (
-        <FieldItem
-          key={field.fieldId}
-          field={field}
-          edits={edits}
-          localImages={localImages}
-          uploadError={uploadErrors[field.fieldId] || undefined}
-          saveOption={saveOption}
-          saveComment={saveComment}
-          saveImage={saveImage}
-          deleteImage={deleteImage}
-          className="form-page-ul-li"
-        />
-      ))}
+      <div className="roof-section" ref={generalSectionRef}>
+        <button
+          type="button"
+          className={`section-toggle${generalStatus ? ` section-toggle--${generalStatus}` : ''}`}
+          onClick={handleGeneralSectionToggle}
+          aria-expanded={openSectionId === "general"}
+          aria-controls="general-section-body"
+        >
+          <span>{form.generalSectionTitle}</span>
+          <span>{generalApproved}/{generalTotal}</span>
+        </button>
+
+        {openSectionId === "general" && (
+          <div id="general-section-body" className="section-body">
+            {form.generalSection?.map((field) => (
+              <FieldItem
+                key={field.fieldId}
+                field={field}
+                edits={edits}
+                localImages={localImages}
+                uploadError={uploadErrors[field.fieldId] || undefined}
+                saveOption={saveOption}
+                saveComment={saveComment}
+                saveImage={saveImage}
+                deleteImage={deleteImage}
+                className="form-page-ul-li"
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {form.roofSides?.map((side) => (
         <RoofSideSection
@@ -131,6 +171,8 @@ export default function FormPage() {
           onAddCustomField={handleAddCustomField}
           onRemoveCustomField={handleRemoveCustomField}
           onRoofSideDeleted={onRoofSideDeleted}
+          openSectionId={openSectionId}
+          onOpenSection={setOpenSectionId}
         />
       ))}
 
