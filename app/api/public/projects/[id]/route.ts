@@ -81,11 +81,21 @@ export async function DELETE(
 
         // collect image urls from form fields
         const imageUrls = new Set<string>();
+
+        // legacy flat general section
         if (Array.isArray(data.generalSection)) {
           data.generalSection.forEach((field: any) => {
             field?.imgUrls?.forEach((url: string) => { if (url) imageUrls.add(url); });
-            // Legacy: migrate single imgUrl string saved before schema cleanup
             if (field?.imgUrl) imageUrls.add(field.imgUrl);
+          });
+        }
+        // new multi-section general area
+        if (Array.isArray(data.generalSections)) {
+          data.generalSections.forEach((sec: any) => {
+            sec.fields?.forEach((field: any) => {
+              field?.imgUrls?.forEach((url: string) => { if (url) imageUrls.add(url); });
+              if (field?.imgUrl) imageUrls.add(field.imgUrl);
+            });
           });
         }
         if (Array.isArray(data.roofSides)) {

@@ -113,8 +113,10 @@ export default function AdminPage() {
       <h3 className="page-title-3">Användare</h3>
       <p className="status-text" style={{marginBottom: '1rem'}}>{status}</p>
       <div className="users-list">
-          {users.length === 0 ? (
-          <p>No users found.</p>
+          {loading ? (
+          <Spinner size={32} />
+          ) : users.length === 0 ? (
+          <p>Inga användare hittades.</p>
           ) : (
             
             users.map((u) => (
@@ -187,7 +189,7 @@ export default function AdminPage() {
 
           <div className="admin-forms-redirect">
             <Link href="/admin/form" id="NavNextLinkThin">
-              Skapa ny formulärmall
+              Hantera mallar
             </Link>
           </div>
 

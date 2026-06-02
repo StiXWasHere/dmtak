@@ -51,9 +51,20 @@ function extractPublicId(url: string) {
 function collectFormImageUrls(form: Form) {
   const imageUrls = new Set<string>();
 
+  // legacy flat general section
   if (Array.isArray(form.generalSection)) {
     form.generalSection.forEach((field) => {
       field.imgUrls?.forEach((url) => { if (url) imageUrls.add(url); });
+      if (field.imgUrl) imageUrls.add(field.imgUrl);
+    });
+  }
+  // new multi-section general area
+  if (Array.isArray(form.generalSections)) {
+    form.generalSections.forEach((sec) => {
+      sec.fields?.forEach((field) => {
+        field.imgUrls?.forEach((url) => { if (url) imageUrls.add(url); });
+        if (field.imgUrl) imageUrls.add(field.imgUrl);
+      });
     });
   }
 

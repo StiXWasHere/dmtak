@@ -7,7 +7,6 @@ export async function POST(req: NextRequest) {
   const { userId } = getAuth(req);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // ensure admin role
   const client = await clerkClient();
   const caller = await client.users.getUser(userId);
   if (caller.publicMetadata.role !== "admin") {
@@ -15,26 +14,25 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { title, type, generalSectionTitle, generalSection } = body as {
+  const { title, type, generalSections, roofSideSections } = body as {
     title: string;
     type: FormTemplate["type"];
-    generalSectionTitle: string;
-    generalSection: FormFieldTemplate[];
+    generalSections: FormSectionTemplate[];
+    roofSideSections: FormSectionTemplate[];
   };
 
-  if (!title || !type || !generalSectionTitle || !generalSection) {
+  if (!title || !type || !generalSections?.length || !roofSideSections?.length) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // Create a new doc reference with an auto-generated ID
   const newDocRef = doc(collection(db, "formTemplates"));
 
   const newTemplate: FormTemplate = {
-    id: newDocRef.id,           // use the generated ID
+    id: newDocRef.id,
     title,
     type,
-    generalSectionTitle,
-    generalSection,
+    generalSections,
+    roofSideSections,
     createdAt: Date.now(),
     ownerId: userId,
   };
