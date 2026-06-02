@@ -147,6 +147,7 @@ export default function CreateFormTemplatePage() {
   }
 
   return (
+    <>
     <div className="template">
       <form className="template-form" onSubmit={handleSubmit}>
         <h2 className="template-form-title">Skapa formulärmall</h2>
@@ -328,7 +329,9 @@ export default function CreateFormTemplatePage() {
         )}
       </div>
 
-      <WarningModal
+
+    </div>      
+    <WarningModal
         open={templateToDelete !== null}
         onClose={() => setTemplateToDelete(null)}
         onConfirm={() => templateToDelete && handleDeleteTemplate(templateToDelete.id)}
@@ -336,6 +339,6 @@ export default function CreateFormTemplatePage() {
         message={`Är du säker på att du vill ta bort mallen "${templateToDelete?.title}"? Formulär skapade från den påverkas inte.`}
         confirmText="Ta bort"
       />
-    </div>
+      </>
   );
 }
