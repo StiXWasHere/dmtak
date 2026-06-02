@@ -19,8 +19,13 @@ type Form = {
     type: 'Delbesiktning' | 'Slutbesiktning' | 'Egenkontroll' | 'Takfall' | 'Besiktningsutlåtande';
     createdAt: number;
     projectId: string;
-    generalSectionTitle: string;
-    generalSection: FormField[];
+    // legacy: single flat general section
+    generalSectionTitle?: string;
+    generalSection?: FormField[];
+    // new: multiple named general sections
+    generalSections?: FormSection[];
+    // stored copy of the template's roof-side structure, used when adding new sides
+    roofSideSectionTemplate?: FormSection[];
     roofSides?: RoofSide[];
     ownerId?: string;
     ownerName?: string;
@@ -56,10 +61,14 @@ type FormTemplate = {
     id: string;
     title: string;
     type: 'Delbesiktning' | 'Slutbesiktning' | 'Egenkontroll' | 'Besiktningsutlåtande';
-    generalSectionTitle: string;
-    generalSection: FormFieldTemplate[];
+    // legacy fields (single flat general section)
+    generalSectionTitle?: string;
+    generalSection?: FormFieldTemplate[];
+    // new fields (multiple named sections)
+    generalSections?: FormSectionTemplate[];
+    roofSideSections?: FormSectionTemplate[];
     createdAt: number;
-    ownerId: string; // optional
+    ownerId: string;
 };
 type FormSectionTemplate = {
     id: string;

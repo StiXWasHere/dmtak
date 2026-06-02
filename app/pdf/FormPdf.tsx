@@ -131,6 +131,49 @@ const styles = StyleSheet.create({
   },
 });
 
+function PdfField({ field, keyPrefix }: { field: FormField; keyPrefix: string }) {
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label}>{field.title}:</Text>
+
+      {field.selected ? (
+        <Text
+          style={
+            field.selected === "Godkänt" || field.selected === "Avhjälpt"
+              ? styles.statusApproved
+              : field.selected === "Ej godkänt"
+              ? styles.statusRejected
+              : styles.status
+          }
+        >
+          {field.selected === "Godkänt" || field.selected === "Avhjälpt"
+            ? "OK "
+            : field.selected === "Ej godkänt"
+            ? "X "
+            : ""}
+          Status: {field.selected}
+        </Text>
+      ) : (
+        <Text style={styles.status}>Status: -</Text>
+      )}
+
+      {field.comment && <Text>Kommentar: {field.comment}</Text>}
+
+      {field.imgUrls && field.imgUrls.length > 0 && (
+        <View wrap={false}>
+          <View style={styles.imageGrid}>
+            {field.imgUrls.map((url, index) => (
+              <View key={`${field.fieldId}-${keyPrefix}-${index}`} style={styles.imageCell}>
+                <Image src={url} style={styles.img} />
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
 export default function FormPdf({ form }: Props) {
   const logoUrl = `${process.env.APP_URL}/dmtaklogo.png`;
   return (
@@ -189,65 +232,42 @@ export default function FormPdf({ form }: Props) {
                 Kund - {form.customerParticipants}
               </Text>
             )}
-
             {form.workerParticipants && (
               <Text style={styles.introductionText}>
                 Underentrepenör - {form.workerParticipants}
               </Text>
             )}
-
             {form.companyParticipants && (
               <Text style={styles.introductionText}>
                 Utförare - {form.companyParticipants}
               </Text>
             )}
-            <Text style={styles.h2}>
-              {form.generalSectionTitle}
-            </Text>
-            {form.generalSection
-              .filter((field) => field.selected && field.selected !== "Ej aktuellt" && field.selected !== "Ej utförd")
-              .map((field) => (
-              <View key={field.fieldId} style={styles.field}>
-                <Text style={styles.label}>{field.title}:</Text>
 
-                {field.selected ? (
-                  <Text
-                    style={
-                      field.selected === "Godkänt" || field.selected === "Avhjälpt"
-                        ? styles.statusApproved
-                        : field.selected === "Ej godkänt"
-                        ? styles.statusRejected
-                        : styles.status
-                    }
-                  >
-                    {field.selected === "Godkänt" || field.selected === "Avhjälpt"
-                      ? "OK "
-                      : field.selected === "Ej godkänt"
-                      ? "X "
-                      : ""}
-                    Status: {field.selected}
-                  </Text>
-                ) : (
-                  <Text style={styles.status}>Status: -</Text>
-                )}
-
-                {field.comment && (
-                  <Text>Kommentar: {field.comment}</Text>
-                )}
-
-                {field.imgUrls && field.imgUrls.length > 0 && (
-                  <View wrap={false}>
-                    <View style={styles.imageGrid}>
-                      {field.imgUrls.map((url, index) => (
-                        <View key={`${field.fieldId}-general-${index}`} style={styles.imageCell}>
-                          <Image src={url} style={styles.img} />
-                        </View>
+            {/* New: multiple named general sections */}
+            {form.generalSections && form.generalSections.length > 0
+              ? form.generalSections.map((sec) => (
+                  <View key={sec.id} style={styles.section}>
+                    <Text style={styles.h2}>{sec.title}</Text>
+                    {sec.fields
+                      .filter((field) => field.selected && field.selected !== "Ej aktuellt" && field.selected !== "Ej utförd")
+                      .map((field) => (
+                        <PdfField key={field.fieldId} field={field} keyPrefix="general" />
                       ))}
-                    </View>
                   </View>
-                )}
-              </View>
-            ))}
+                ))
+              : /* Legacy: single flat general section */ (
+                <>
+                  {form.generalSectionTitle && (
+                    <Text style={styles.h2}>{form.generalSectionTitle}</Text>
+                  )}
+                  {(form.generalSection ?? [])
+                    .filter((field) => field.selected && field.selected !== "Ej aktuellt" && field.selected !== "Ej utförd")
+                    .map((field) => (
+                      <PdfField key={field.fieldId} field={field} keyPrefix="general" />
+                    ))}
+                </>
+              )
+            }
           </View>
 
           {/* Roof sides */}
@@ -264,50 +284,8 @@ export default function FormPdf({ form }: Props) {
                   {section.fields
                     .filter((field) => field.selected && field.selected !== "Ej aktuellt" && field.selected !== "Ej utfört")
                     .map((field) => (
-                    <View
-                      key={field.fieldId}
-                      style={styles.field}
-                    >
-                      <Text style={styles.label}>{field.title}:</Text>
-
-                      {field.selected ? (
-                        <Text
-                          style={
-                            field.selected === "Godkänt" || field.selected === "Avhjälpt"
-                              ? styles.statusApproved
-                              : field.selected === "Ej godkänt"
-                              ? styles.statusRejected
-                              : styles.status
-                          }
-                        >
-                          {field.selected === "Godkänt" || field.selected === "Avhjälpt"
-                            ? "OK "
-                            : field.selected === "Ej godkänt"
-                            ? "X "
-                            : ""}
-                          Status: {field.selected}
-                        </Text>
-                      ) : (
-                        <Text style={styles.status}>Status: -</Text>
-                      )}
-
-                      {field.comment && (
-                        <Text>Kommentar: {field.comment}</Text>
-                      )}
-
-                      {field.imgUrls && field.imgUrls.length > 0 && (
-                        <View wrap={false}>
-                          <View style={styles.imageGrid}>
-                            {field.imgUrls.map((url, index) => (
-                              <View key={`${field.fieldId}-roof-${index}`} style={styles.imageCell}>
-                                <Image src={url} style={styles.img} />
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      )}
-                    </View>
-                  ))}
+                      <PdfField key={field.fieldId} field={field} keyPrefix="roof" />
+                    ))}
                 </View>
               ))}
             </View>

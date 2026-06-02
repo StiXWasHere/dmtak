@@ -22,8 +22,11 @@ export const useFormEdits = (projectId: string, formId: string) => {
         const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
         const initialEdits: FormEdits = {};
 
-        // initialize general fields
-        data.generalSection.forEach(f => {
+        // initialize general fields — support both new (generalSections) and legacy (generalSection)
+        const generalFields: FormField[] = data.generalSection ??
+          (data.generalSections ?? []).flatMap((sec) => sec.fields);
+
+        generalFields.forEach(f => {
           initialEdits[f.fieldId] = {
             selected: f.selected || saved[f.fieldId]?.selected || "",
             comment: f.comment || saved[f.fieldId]?.comment || "",

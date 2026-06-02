@@ -12,22 +12,30 @@ const defaultFieldOptions = [
   "Ej utförd"
 ] as const; // Define as const to get literal types
 
-// Create a new roof side with unique IDs
-export const createRoofSide = (name?: string, existingCount?: number): RoofSide => ({
-  ...roofSideTemplate,
-  id: uuid(),
-  name: name || `Tak ${existingCount ? existingCount + 1 : 1}`,
-  _isLocal: true,
-  sections: roofSideTemplate.sections.map((sec) => ({
-    ...sec,
+// Create a new roof side with unique IDs.
+// When sectionTemplate is provided (from Form.roofSideSectionTemplate), it is used
+// instead of the hardcoded roofSideTemplate, allowing DB-driven templates to work.
+export const createRoofSide = (
+  name?: string,
+  existingCount?: number,
+  sectionTemplate?: FormSection[]
+): RoofSide => {
+  const sourceSections = sectionTemplate ?? roofSideTemplate.sections;
+  return {
     id: uuid(),
-    fields: sec.fields.map((f) => ({ 
-      ...f, 
-      fieldId: uuid(),
-      options: f.options ?? [...defaultFieldOptions]
+    name: name || `Tak ${existingCount ? existingCount + 1 : 1}`,
+    _isLocal: true,
+    sections: sourceSections.map((sec) => ({
+      ...sec,
+      id: uuid(),
+      fields: sec.fields.map((f) => ({
+        ...f,
+        fieldId: uuid(),
+        options: f.options ?? [...defaultFieldOptions],
+      })),
     })),
-  })),
-});
+  };
+};
 
 export const createCustomField = (title: string): FormField => ({
   title,

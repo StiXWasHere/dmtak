@@ -133,7 +133,11 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
       const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
       const initialEdits: FormEdits = {};
 
-      data.generalSection.forEach((f) => {
+      // Support both new (generalSections) and legacy (generalSection) structure
+      const generalFields: FormField[] = data.generalSection ??
+        (data.generalSections ?? []).flatMap((sec) => sec.fields);
+
+      generalFields.forEach((f) => {
         const imageUrls = getImageUrls(saved[f.fieldId], f);
         initialEdits[f.fieldId] = {
           selected: saved[f.fieldId]?.selected || f.selected || "",
@@ -384,7 +388,7 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
   const addRoofSideHandler = useCallback((name?: string) => {
     if (!form) return;
 
-    const newSide = createRoofSide(name, form.roofSides?.length);
+    const newSide = createRoofSide(name, form.roofSides?.length, form.roofSideSectionTemplate);
     setForm({ ...form, roofSides: [...(form.roofSides || []), newSide] });
 
     const newEdits: FormEdits = {};
@@ -480,12 +484,25 @@ export function useProjectFormPage({ projectId, formId }: UseProjectFormPagePara
   const doSave = useCallback(async (): Promise<Form | null> => {
     if (!form || !projectId || !formId) return null;
 
-    const updatedGeneral = buildUpdatedGeneralSection(form.generalSection, edits, localImages);
     const updatedRoofSides = buildUpdatedRoofSides(form.roofSides, edits, localImages);
+
+    // Build updated general area for both new (generalSections) and legacy (generalSection) structure
+    const updatedGeneralSections = form.generalSections?.length
+      ? form.generalSections.map((sec) => ({
+          ...sec,
+          fields: buildUpdatedGeneralSection(sec.fields, edits, localImages),
+        }))
+      : undefined;
+    const updatedGeneralSection = updatedGeneralSections
+      ? undefined
+      : buildUpdatedGeneralSection(form.generalSection ?? [], edits, localImages);
 
     const payload = {
       ...form,
-      generalSection: updatedGeneral,
+      ...(updatedGeneralSections
+        ? { generalSections: updatedGeneralSections }
+        : { generalSection: updatedGeneralSection }
+      ),
       roofSides: updatedRoofSides || [],
       customerParticipants: customerParticipants.trim() || undefined,
       workerParticipants: workerParticipants.trim() || undefined,

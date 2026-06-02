@@ -59,6 +59,10 @@ export default function FormPage() {
     }
   };
 
+  const handleSectionToggle = (sectionId: string) => {
+    setOpenSectionId((prev) => (prev === sectionId ? null : sectionId));
+  };
+
   if (loading) return (
     <div className="loading-page">
       <Spinner size={48} />
@@ -68,9 +72,13 @@ export default function FormPage() {
   if (!form) return <p>Inga formulär hittade.</p>;
 
   const COMPLETED_OPTIONS = new Set(['Godkänt', 'Avhjälpt', 'Ej aktuellt']);
+
+  // legacy single general section stats
   const generalApproved = form.generalSection?.filter(f => COMPLETED_OPTIONS.has(edits[f.fieldId]?.selected ?? f.selected ?? '')).length ?? 0;
   const generalTotal = form.generalSection?.length ?? 0;
   const generalStatus = generalTotal > 0 && generalApproved === generalTotal ? 'complete' : generalApproved > 0 ? 'partial' : null;
+
+  const hasMultipleGeneralSections = (form.generalSections?.length ?? 0) > 0;
 
   return (
     <div className="form-page">
@@ -123,37 +131,78 @@ export default function FormPage() {
         </label>
       </div>
 
-      <div className="roof-section" ref={generalSectionRef}>
-        <button
-          type="button"
-          className={`section-toggle${generalStatus ? ` section-toggle--${generalStatus}` : ''}`}
-          onClick={handleGeneralSectionToggle}
-          aria-expanded={openSectionId === "general"}
-          aria-controls="general-section-body"
-        >
-          <span>{form.generalSectionTitle}</span>
-          <span>{generalApproved}/{generalTotal}</span>
-        </button>
-
-        {openSectionId === "general" && (
-          <div id="general-section-body" className="section-body">
-            {form.generalSection?.map((field) => (
-              <FieldItem
-                key={field.fieldId}
-                field={field}
-                edits={edits}
-                localImages={localImages}
-                uploadError={uploadErrors[field.fieldId] || undefined}
-                saveOption={saveOption}
-                saveComment={saveComment}
-                saveImage={saveImage}
-                deleteImage={deleteImage}
-                className="form-page-ul-li"
-              />
-            ))}
+      {hasMultipleGeneralSections
+        ? form.generalSections!.map((section) => {
+            const secApproved = section.fields.filter(f =>
+              COMPLETED_OPTIONS.has(edits[f.fieldId]?.selected ?? f.selected ?? '')
+            ).length;
+            const secTotal = section.fields.length;
+            const secStatus = secTotal > 0 && secApproved === secTotal ? 'complete' : secApproved > 0 ? 'partial' : null;
+            return (
+              <div className="roof-section" key={section.id}>
+                <button
+                  type="button"
+                  className={`section-toggle${secStatus ? ` section-toggle--${secStatus}` : ''}`}
+                  onClick={() => handleSectionToggle(section.id)}
+                  aria-expanded={openSectionId === section.id}
+                >
+                  <span>{section.title}</span>
+                  <span>{secApproved}/{secTotal}</span>
+                </button>
+                {openSectionId === section.id && (
+                  <div className="section-body">
+                    {section.fields.map((field) => (
+                      <FieldItem
+                        key={field.fieldId}
+                        field={field}
+                        edits={edits}
+                        localImages={localImages}
+                        uploadError={uploadErrors[field.fieldId] || undefined}
+                        saveOption={saveOption}
+                        saveComment={saveComment}
+                        saveImage={saveImage}
+                        deleteImage={deleteImage}
+                        className="form-page-ul-li"
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        : (
+          <div className="roof-section" ref={generalSectionRef}>
+            <button
+              type="button"
+              className={`section-toggle${generalStatus ? ` section-toggle--${generalStatus}` : ''}`}
+              onClick={handleGeneralSectionToggle}
+              aria-expanded={openSectionId === "general"}
+              aria-controls="general-section-body"
+            >
+              <span>{form.generalSectionTitle}</span>
+              <span>{generalApproved}/{generalTotal}</span>
+            </button>
+            {openSectionId === "general" && (
+              <div id="general-section-body" className="section-body">
+                {form.generalSection?.map((field) => (
+                  <FieldItem
+                    key={field.fieldId}
+                    field={field}
+                    edits={edits}
+                    localImages={localImages}
+                    uploadError={uploadErrors[field.fieldId] || undefined}
+                    saveOption={saveOption}
+                    saveComment={saveComment}
+                    saveImage={saveImage}
+                    deleteImage={deleteImage}
+                    className="form-page-ul-li"
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        )
+      }
 
       {form.roofSides?.map((side) => (
         <RoofSideSection
