@@ -3,6 +3,7 @@ import { v2 as cloudinary } from "cloudinary";
 import sharp from "sharp";
 import { deleteImage } from "@/lib/actions/deleteImage";
 import { logger } from "@/lib/logger";
+import { getAuth } from "@clerk/nextjs/server";
 
 //Upload to Cloudinary setup
 
@@ -13,6 +14,9 @@ cloudinary.config({
 });
 
 export async function POST(req: NextRequest) {
+  const { userId } = getAuth(req);
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
@@ -92,6 +96,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const { userId } = getAuth(req);
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
     const body = await req.json();
     const url = body?.url as string | undefined;

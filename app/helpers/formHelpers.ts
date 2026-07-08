@@ -106,12 +106,3 @@ export function buildUpdatedRoofSides(
     };
   });
 }
-
-// Optional helper: convert a File to base64 (used only if needed before Cloudinary upload)
-export const fileToBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });

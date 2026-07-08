@@ -92,6 +92,7 @@ export default function AdminPage() {
   async function deleteUser(id: string) {
     const res = await fetch("/api/admin/delete-user", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: id }),
     });
 
@@ -130,7 +131,7 @@ export default function AdminPage() {
                       <select
                         className="user-role-select"
                         id={`role-${u.id}`}
-                        value={u.publicMetadata.role as string || "none"}
+                        value={(u.publicMetadata.role as string) ?? "none"}
                         onChange={(e) => updateRole(u.id, e.target.value)}
                       >
                         <option value="admin">Admin</option>

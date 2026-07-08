@@ -11,7 +11,6 @@ export async function GET(
   const { id } = await context.params;
 
   if (!id) {
-    console.log("ID provided:", id);
     return NextResponse.json({ error: "Missing project ID" }, { status: 400 });
   }
 
